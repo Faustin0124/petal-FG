@@ -214,6 +214,24 @@ struct TranscriptionPane: View {
                     }
                 }
             }
+
+            Section("Languages") {
+                Picker("Input Language", selection: Binding(viewModel.$inputLanguageCode)) {
+                    ForEach(TranscriptionLanguage.supported) { lang in
+                        Text(lang.displayName).tag(lang.code)
+                    }
+                }
+
+                Picker("Output Language", selection: Binding(viewModel.$outputLanguageCode)) {
+                    Text("Same as input").tag("auto")
+                    Text("English (translate)").tag("en")
+                }
+
+                if viewModel.outputLanguageCode != "auto" {
+                    Text("Translation to English is only available with Whisper models.")
+                        .settingDescription()
+                }
+            }
         }
         .formStyle(.grouped)
         .alert("Delete Model", isPresented: $showDeleteConfirmation) {

@@ -13,6 +13,7 @@
 "Audio Preprocessing" = "Audio Preprocessing";
 "Mode" = "Mode";
 "Smart Prompt" = "Smart Prompt";
+"Languages" = "Languages";
 "Recent" = "Recent";
 "Retention" = "Retention";
 "Compression" = "Compression";
@@ -22,6 +23,11 @@
 
 /* Settings - Labels */
 "Hold Duration" = "Hold Duration";
+"Input Language" = "Input Language";
+"Output Language" = "Output Language";
+"Same as input" = "Same as input";
+"English (translate)" = "English (translate)";
+"Translation to English is only available with Whisper models." = "Translation to English is only available with Whisper models.";
 "Microphone" = "Microphone";
 "Accessibility" = "Accessibility";
 "Status" = "Status";

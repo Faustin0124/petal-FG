@@ -44,6 +44,8 @@ final class AppModel {
     @ObservationIgnored @Shared(.hasCompletedSetup) var hasCompletedSetup = false
     @ObservationIgnored @Shared(.transcriptionMode) var transcriptionMode: TranscriptionMode = .verbatim
     @ObservationIgnored @Shared(.smartPrompt) var smartPrompt = "Clean up filler words and repeated phrases. Return a polished version of what was said."
+    @ObservationIgnored @Shared(.inputLanguageCode) var inputLanguageCode = "auto"
+    @ObservationIgnored @Shared(.outputLanguageCode) var outputLanguageCode = "auto"
     @ObservationIgnored @Shared(.appleIntelligenceEnabled) var appleIntelligenceEnabled = false
     @ObservationIgnored @Shared(.compressHistoryAudio) var compressHistoryAudio = false
     @ObservationIgnored @Shared(.historyRetentionMode) var historyRetentionMode: HistoryRetentionMode = .both
@@ -448,7 +450,9 @@ final class AppModel {
                 normalizedAudioURL,
                 selectedModelOption,
                 mode,
-                mode == .smart ? smartPrompt : nil
+                mode == .smart ? smartPrompt : nil,
+                inputLanguageCode == "auto" ? nil : inputLanguageCode,
+                outputLanguageCode == "auto" ? nil : outputLanguageCode
             )
             let originalTranscript = transcript
             var shouldPersistOriginalVariant = false
@@ -832,7 +836,9 @@ final class AppModel {
                 audioURL,
                 selectedModelOption,
                 mode,
-                mode == .smart ? smartPrompt : nil
+                mode == .smart ? smartPrompt : nil,
+                inputLanguageCode == "auto" ? nil : inputLanguageCode,
+                outputLanguageCode == "auto" ? nil : outputLanguageCode
             )
             let transcriptionCallElapsed = now.timeIntervalSince(transcriptionCallStart)
             let originalTranscript = transcript

@@ -13,3 +13,6 @@
 /* ShortcutTriggerMode */
 "Key Combo" = "Combinaison de touches";
 "Double-Tap" = "Double appui";
+
+/* TranscriptionLanguage */
+"Auto-detect" = "Détection automatique";

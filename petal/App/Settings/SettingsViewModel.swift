@@ -14,6 +14,8 @@ import SwiftUI
 @MainActor
 @Observable
 final class SettingsViewModel {
+    @ObservationIgnored @Shared(.inputLanguageCode) var inputLanguageCode = "auto"
+    @ObservationIgnored @Shared(.outputLanguageCode) var outputLanguageCode = "auto"
     @ObservationIgnored @Shared(.trimSilenceEnabled) var trimSilenceEnabled = false
     @ObservationIgnored @Shared(.autoSpeedEnabled) var autoSpeedEnabled = false
     @ObservationIgnored @Shared(.transcriptionMode) var transcriptionMode: TranscriptionMode = .verbatim
