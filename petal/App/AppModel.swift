@@ -148,7 +148,7 @@ final class AppModel {
             guard let self, self.hasCompletedSetup else { return }
             self.warmupTask?.cancel()
             self.isWarmingModel = true
-            self.transientMessage = "Warming up \(self.selectedModelOption?.displayName ?? "model")…"
+            self.transientMessage = String(localized: "Warming up \(self.selectedModelOption?.displayName ?? "model")…")
             self.warmupTask = Task { [weak self] in
                 guard let self else { return }
                 await self.warmModelTask()
@@ -187,18 +187,18 @@ final class AppModel {
     var statusTitle: String {
         switch sessionState {
         case .idle:
-            return hasCompletedSetup ? "Ready" : "Setup Required"
+            return hasCompletedSetup ? String(localized: "Ready") : String(localized: "Setup Required")
         case .recording:
-            return "REC"
+            return String(localized: "REC")
         case let .processing(stage):
             switch stage {
-            case .trimming: return "Trimming"
-            case .speeding: return "Speeding"
-            case .transcribing: return "Transcribing"
-            case .refining: return "Refining"
+            case .trimming: return String(localized: "Trimming")
+            case .speeding: return String(localized: "Speeding")
+            case .transcribing: return String(localized: "Transcribing")
+            case .refining: return String(localized: "Refining")
             }
         case .error:
-            return "Error"
+            return String(localized: "Error")
         }
     }
 
@@ -241,7 +241,7 @@ final class AppModel {
         guard hasCompletedSetup, isSelectedModelDownloaded else { return }
         warmupTask?.cancel()
         isWarmingModel = true
-        transientMessage = "Warming up \(selectedModelOption?.displayName ?? "model")…"
+        transientMessage = String(localized: "Warming up \(selectedModelOption?.displayName ?? "model")…")
         warmupTask = Task {
             await transcriptionClient.unloadModel()
             await warmModelTask()
@@ -311,11 +311,11 @@ final class AppModel {
 
         if microphonePermissionState == .denied {
             await permissionsClient.openMicrophonePrivacySettings()
-            lastError = "Turn on microphone access in System Settings, then return to Petal."
+            lastError = String(localized: "Turn on microphone access in System Settings, then return to Petal.")
             return
         }
 
-        lastError = "Microphone access is required to record audio."
+        lastError = String(localized: "Microphone access is required to record audio.")
     }
 
     func accessibilityPermissionButtonTapped() {
@@ -333,7 +333,7 @@ final class AppModel {
 
             if !accessibilityAuthorized {
                 await permissionsClient.openAccessibilityPrivacySettings()
-                transientMessage = "Turn on Accessibility in System Settings to continue using Petal."
+                transientMessage = String(localized: "Turn on Accessibility in System Settings to continue using Petal.")
             }
         }
     }
@@ -345,7 +345,7 @@ final class AppModel {
         let transcript = formattedHistoryEntry(entry)
         guard transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else { return }
         copyTranscriptToClipboard(transcript)
-        transientMessage = "Copied to clipboard."
+        transientMessage = String(localized: "Copied to clipboard.")
     }
 
     // MARK: - Dropped Files
@@ -353,38 +353,38 @@ final class AppModel {
     func droppedAudioFileRejected(_ error: AudioFileDropValidationError) {
         switch error {
         case .noFile:
-            transientMessage = "Drop an audio file to transcribe."
+            transientMessage = String(localized: "Drop an audio file to transcribe.")
         case .multipleFiles:
-            transientMessage = "Drop one audio file at a time."
+            transientMessage = String(localized: "Drop one audio file at a time.")
         case .unsupportedFile:
-            transientMessage = "That file type is not supported."
+            transientMessage = String(localized: "That file type is not supported.")
         case .directory:
-            transientMessage = "Drop an audio file, not a folder."
+            transientMessage = String(localized: "Drop an audio file, not a folder.")
         }
     }
 
     func transcribeDroppedAudioFile(_ audioURL: URL) async {
         guard hasCompletedSetup else {
-            transientMessage = "Complete setup before transcribing files."
+            transientMessage = String(localized: "Complete setup before transcribing files.")
             beginOnboardingFlow()
             showOnboardingWindow()
             return
         }
 
         guard !isTranscribingDroppedFile else {
-            transientMessage = "A file is already being transcribed."
+            transientMessage = String(localized: "A file is already being transcribed.")
             return
         }
 
         let isCurrentlyRecording = await audioClient.isRecording()
         guard !isCurrentlyRecording, !isRecordingLifecycleBusy else {
-            transientMessage = "Finish the current transcription first."
+            transientMessage = String(localized: "Finish the current transcription first.")
             return
         }
 
         guard let selectedModelOption else {
             sessionState = .error(AppTranscriptionError.pipelineUnavailable.localizedDescription)
-            transientMessage = "Transcription pipeline is not available."
+            transientMessage = String(localized: "Transcription pipeline is not available.")
             return
         }
 
@@ -488,7 +488,7 @@ final class AppModel {
             if isEmptyTranscript {
                 pipelineStage = "persist-empty"
                 await soundClient.playTranscriptionNoResult()
-                transientMessage = "No speech detected."
+                transientMessage = String(localized: "No speech detected.")
 
                 appendTranscriptHistory(
                     transcript: transcript,
@@ -507,7 +507,7 @@ final class AppModel {
                 copyTranscriptToClipboard(transcript)
                 await postCopiedToClipboardNotification(body: "Copied to clipboard")
                 await floatingCapsuleClient.showCopiedToClipboard()
-                transientMessage = "Copied to clipboard."
+                transientMessage = String(localized: "Copied to clipboard.")
 
                 appendTranscriptHistory(
                     transcript: transcript,
@@ -561,7 +561,7 @@ final class AppModel {
         } catch {
             reportIssue(error)
             lastError = error.localizedDescription
-            transientMessage = "Transcription failed."
+            transientMessage = String(localized: "Transcription failed.")
             sessionState = .error(error.localizedDescription)
             stopTranscriptionProgressTracking()
             await floatingCapsuleClient.showError("Transcription failed")
@@ -605,7 +605,7 @@ final class AppModel {
         }
 
         guard hasCompletedSetup else {
-            transientMessage = "Complete setup to start recording."
+            transientMessage = String(localized: "Complete setup to start recording.")
             beginOnboardingFlow()
             showOnboardingWindow()
             return
@@ -641,7 +641,7 @@ final class AppModel {
 
             guard microphoneAuthorized else {
                 sessionState = .error("Microphone permission denied")
-                transientMessage = "Turn on microphone access to record."
+                transientMessage = String(localized: "Turn on microphone access to record.")
                 pushToTalkIsActive = false
                 currentShortcutPressStart = nil
                 await floatingCapsuleClient.showError("Microphone denied")
@@ -723,7 +723,7 @@ final class AppModel {
             guard isStartingRecording else { return }
             if holdDuration < toggleActivationThresholdSeconds {
                 toggleRecordingIsActive = true
-                transientMessage = "Listening — tap your shortcut to stop."
+                transientMessage = String(localized: "Listening — tap your shortcut to stop.")
                 logger.info("Toggle recording engaged while start in progress. holdDuration=\(holdDuration, privacy: .public)")
                 let holdDurationText = holdDuration.formatted(.number.precision(.fractionLength(2)))
                 consoleLog("Toggle recording engaged while start in progress. holdDuration=\(holdDurationText)s")
@@ -737,7 +737,7 @@ final class AppModel {
 
         if holdDuration < toggleActivationThresholdSeconds {
             toggleRecordingIsActive = true
-            transientMessage = "Listening — tap your shortcut to stop."
+            transientMessage = String(localized: "Listening — tap your shortcut to stop.")
             logger.info("Toggle recording engaged. holdDuration=\(holdDuration, privacy: .public)")
             let holdDurationText = holdDuration.formatted(.number.precision(.fractionLength(2)))
             consoleLog("Toggle recording engaged. holdDuration=\(holdDurationText)s")
@@ -912,7 +912,7 @@ final class AppModel {
             if isEmptyTranscript {
                 pipelineStage = "persist-empty"
                 await soundClient.playTranscriptionNoResult()
-                transientMessage = "No speech detected."
+                transientMessage = String(localized: "No speech detected.")
                 logger.info("Empty transcription result — no speech detected")
                 consoleLog("Empty transcription result — no speech detected")
 
@@ -1060,7 +1060,7 @@ final class AppModel {
                 case .pasted:
                     transientMessage = nil
                 case .copiedOnly:
-                    transientMessage = "Accessibility access is needed to paste. Turn it on in System Settings, then try again."
+                    transientMessage = String(localized: "Accessibility access is needed to paste. Turn it on in System Settings, then try again.")
                     await postPasteFallbackNotification()
                     lastError = nil
                     sessionState = .idle
@@ -1089,7 +1089,7 @@ final class AppModel {
             await stopPlaybackDuckingIfNeeded()
             reportIssue(error)
             lastError = error.localizedDescription
-            transientMessage = "Transcription failed."
+            transientMessage = String(localized: "Transcription failed.")
             sessionState = .error(error.localizedDescription)
             stopTranscriptionProgressTracking()
             await floatingCapsuleClient.showError("Transcription failed")
@@ -1404,7 +1404,7 @@ final class AppModel {
             ignoreNextShortcutKeyUp = false
             currentShortcutPressStart = nil
             sessionState = .idle
-            transientMessage = "Recording cancelled."
+            transientMessage = String(localized: "Recording cancelled.")
             await stopPlaybackDuckingIfNeeded()
             await floatingCapsuleClient.hide()
             logger.info("Recording canceled from keyboard confirmation")
@@ -1522,7 +1522,7 @@ final class AppModel {
             currentShortcutPressStart = nil
             sessionState = .recording
             activeHistorySessionID = uuid()
-            transientMessage = "Listening... use petal://stop to transcribe."
+            transientMessage = String(localized: "Listening... use petal://stop to transcribe.")
             await startPlaybackDuckingIfNeeded()
             logger.info("Recording started from deep link")
             consoleLog("Recording started from deep link")
@@ -1619,7 +1619,7 @@ final class AppModel {
         )
 
         if selectedModelOption.requiresDownload, !isSelectedModelDownloaded {
-            transientMessage = "Preparing \(selectedModelOption.displayName)…"
+            transientMessage = String(localized: "Preparing \(selectedModelOption.displayName)…")
             let maxAttempts = 3
             var didDownload = false
 
@@ -1743,7 +1743,7 @@ final class AppModel {
             consoleLog("Model warmup complete: \(selectedModelOption.rawValue)")
         } catch {
             reportIssue(error)
-            transientMessage = "Model will load on first transcription."
+            transientMessage = String(localized: "Model will load on first transcription.")
             logger.error("Model warmup failed: \(error.localizedDescription, privacy: .public)")
             consoleLog("Model warmup failed: \(error.localizedDescription)")
         }

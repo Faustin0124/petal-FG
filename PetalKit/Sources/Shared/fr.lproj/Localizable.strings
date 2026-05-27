@@ -1,0 +1,15 @@
+/* TranscriptionMode */
+"Verbatim" = "Verbatim";
+"Smart" = "Intelligent";
+"Word-for-word transcription" = "Transcription mot pour mot";
+"Refine transcription with a custom prompt" = "Affiner la transcription avec une invite personnalisée";
+
+/* HistoryRetentionMode */
+"Off" = "Désactivé";
+"Transcripts" = "Transcriptions";
+"Audio" = "Audio";
+"Audio + Transcripts" = "Audio + Transcriptions";
+
+/* ShortcutTriggerMode */
+"Key Combo" = "Combinaison de touches";
+"Double-Tap" = "Double appui";

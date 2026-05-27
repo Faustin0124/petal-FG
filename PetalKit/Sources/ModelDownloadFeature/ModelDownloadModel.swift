@@ -49,7 +49,7 @@ public final class ModelDownloadModel {
     public func pauseButtonTapped() {
         guard state.isActive else { return }
         downloadClient.pauseDownload()
-        state = .paused(state.progress ?? .init(fraction: 0, statusText: "Download paused"))
+        state = .paused(state.progress ?? .init(fraction: 0, statusText: String(localized: "Download paused", bundle: .module)))
     }
 
     public func resumeButtonTapped() async {
@@ -68,7 +68,7 @@ public final class ModelDownloadModel {
             try await downloadClient.deleteModel(option)
             state = .notDownloaded
         } catch {
-            lastError = "Failed to delete model: \(error.localizedDescription)"
+            lastError = String(localized: "Failed to delete model: \(error.localizedDescription)", bundle: .module)
         }
     }
 
@@ -98,7 +98,7 @@ public final class ModelDownloadModel {
 
     private func startDownload() async {
         guard let option = selectedModelOption else {
-            let message = "Select a model to continue."
+            let message = String(localized: "Select a model to continue.", bundle: .module)
             state = .failed(message)
             lastError = message
             return
@@ -122,7 +122,7 @@ public final class ModelDownloadModel {
             downloadingModelOption = nil
             state = .downloaded
             onDownloadCompleted?()
-            transientMessage = "Model ready. Click Finish Setup to continue."
+            transientMessage = String(localized: "Model ready. Click Finish Setup to continue.", bundle: .module)
             lastError = nil
         } catch is CancellationError {
             downloadingModelOption = nil
@@ -150,13 +150,13 @@ public final class ModelDownloadModel {
     private func handleDownloadFailure(_ failure: DownloadClientFailure) {
         switch failure {
         case .paused:
-            let progress = state.progress ?? .init(fraction: 0, statusText: "Download paused")
-            state = .paused(.init(fraction: progress.fraction, statusText: "Download paused"))
+            let progress = state.progress ?? .init(fraction: 0, statusText: String(localized: "Download paused", bundle: .module))
+            state = .paused(.init(fraction: progress.fraction, statusText: String(localized: "Download paused", bundle: .module)))
             lastError = nil
         case .cancelled:
             resetToIdle()
         case .aria2BinaryMissing, .failed:
-            let message = failure.errorDescription ?? "Download failed."
+            let message = failure.errorDescription ?? String(localized: "Download failed.", bundle: .module)
             state = .failed(message)
             lastError = message
         }

@@ -1,0 +1,138 @@
+/* Settings - Tabs */
+"General" = "General";
+"Transcription" = "Transcription";
+"History" = "History";
+
+/* Settings - Sections */
+"Shortcut" = "Shortcut";
+"Permissions" = "Permissions";
+"Clipboard" = "Clipboard";
+"System Audio" = "System Audio";
+"Diagnostics" = "Diagnostics";
+"Model" = "Model";
+"Audio Preprocessing" = "Audio Preprocessing";
+"Mode" = "Mode";
+"Smart Prompt" = "Smart Prompt";
+"Recent" = "Recent";
+"Retention" = "Retention";
+"Compression" = "Compression";
+"Storage" = "Storage";
+"Clear Data" = "Clear Data";
+"Apple Intelligence" = "Apple Intelligence";
+
+/* Settings - Labels */
+"Hold Duration" = "Hold Duration";
+"Microphone" = "Microphone";
+"Accessibility" = "Accessibility";
+"Status" = "Status";
+"Size" = "Size";
+"Location" = "Location";
+"Keep" = "Keep";
+"Prompt" = "Prompt";
+
+/* Settings - Permissions */
+"Granted" = "Granted";
+"Grant Access" = "Grant Access";
+"Unavailable" = "Unavailable";
+
+/* Settings - Toggles */
+"Restore clipboard after paste" = "Restore clipboard after paste";
+"Lower system volume while recording" = "Lower system volume while recording";
+"Enable logs" = "Enable logs";
+"Trim silence" = "Trim silence";
+"Auto speed-up" = "Auto speed-up";
+"Enhance with Apple Intelligence" = "Enhance with Apple Intelligence";
+"Extra compression" = "Extra compression";
+
+/* Settings - Descriptions */
+"When enabled, Petal restores your previous clipboard contents after auto-pasting." = "When enabled, Petal restores your previous clipboard contents after auto-pasting.";
+"Reduces system output volume during dictation and restores it afterward." = "Reduces system output volume during dictation and restores it afterward.";
+"Disabled by default to avoid creating log files unless you explicitly turn this on." = "Disabled by default to avoid creating log files unless you explicitly turn this on.";
+"Removes silent segments from the start and end of your recording." = "Removes silent segments from the start and end of your recording.";
+"Speeds up quiet or low-energy audio to reduce transcription time." = "Speeds up quiet or low-energy audio to reduce transcription time.";
+"Post-process transcriptions on-device to fix grammar, punctuation, and formatting. Enables Smart mode for all models." = "Post-process transcriptions on-device to fix grammar, punctuation, and formatting. Enables Smart mode for all models.";
+"Requires macOS 26 with Apple Intelligence enabled." = "Requires macOS 26 with Apple Intelligence enabled.";
+"History audio is saved as AAC (.m4a) by default. Enable for lower-bitrate files." = "History audio is saved as AAC (.m4a) by default. Enable for lower-bitrate files.";
+
+/* Settings - Model */
+"Recommended" = "Recommended";
+"Warming up…" = "Warming up…";
+"Ready (No download required)" = "Ready (No download required)";
+"Downloaded" = "Downloaded";
+"Delete Model" = "Delete Model";
+"Download Model" = "Download Model";
+"Resume" = "Resume";
+"Pause" = "Pause";
+"Cancel" = "Cancel";
+"Downloading %@" = "Downloading %@";
+"This will remove the downloaded model from your device. You can re-download it later." = "This will remove the downloaded model from your device. You can re-download it later.";
+
+/* Settings - Buttons */
+"Export Logs…" = "Export Logs…";
+"Check for Updates..." = "Check for Updates...";
+"Open in Finder" = "Open in Finder";
+
+/* Settings - Tooltips */
+"Copy transcript" = "Copy transcript";
+
+/* Settings - Alerts */
+"Delete All History & Media" = "Delete All History & Media";
+"Delete Media Only" = "Delete Media Only";
+"Delete All" = "Delete All";
+"Delete Media" = "Delete Media";
+"This will permanently delete all transcription history, audio files, and transcript files." = "This will permanently delete all transcription history, audio files, and transcript files.";
+"This will delete all saved audio files but keep your transcription history intact." = "This will delete all saved audio files but keep your transcription history intact.";
+"Delete" = "Delete";
+"Delete Model Alert" = "Delete Model";
+
+/* About View */
+"Build" = "Build";
+"Github" = "Github";
+"Designed By" = "Designed By";
+"Last Update" = "Last Update";
+"Made in" = "Made in";
+
+/* Status Item - Menu */
+"Stop Recording" = "Stop Recording";
+"Grant Microphone Access" = "Grant Microphone Access";
+"Enable Accessibility Access" = "Enable Accessibility Access";
+"History" = "History";
+"No transcripts yet" = "No transcripts yet";
+"About Petal" = "About Petal";
+"Settings" = "Settings";
+"Quit Petal" = "Quit Petal";
+
+/* Status Title */
+"Ready" = "Ready";
+"Setup Required" = "Setup Required";
+"REC" = "REC";
+"Trimming" = "Trimming";
+"Speeding" = "Speeding";
+"Transcribing" = "Transcribing";
+"Refining" = "Refining";
+"Error" = "Error";
+
+/* AppModel - Transient Messages */
+"Warming up %@…" = "Warming up %@…";
+"Preparing %@…" = "Preparing %@…";
+"Turn on Accessibility in System Settings to continue using Petal." = "Turn on Accessibility in System Settings to continue using Petal.";
+"Copied to clipboard." = "Copied to clipboard.";
+"Drop an audio file to transcribe." = "Drop an audio file to transcribe.";
+"Drop one audio file at a time." = "Drop one audio file at a time.";
+"That file type is not supported." = "That file type is not supported.";
+"Drop an audio file, not a folder." = "Drop an audio file, not a folder.";
+"Complete setup before transcribing files." = "Complete setup before transcribing files.";
+"A file is already being transcribed." = "A file is already being transcribed.";
+"Finish the current transcription first." = "Finish the current transcription first.";
+"Transcription pipeline is not available." = "Transcription pipeline is not available.";
+"No speech detected." = "No speech detected.";
+"Transcription failed." = "Transcription failed.";
+"Complete setup to start recording." = "Complete setup to start recording.";
+"Turn on microphone access to record." = "Turn on microphone access to record.";
+"Listening — tap your shortcut to stop." = "Listening — tap your shortcut to stop.";
+"Accessibility access is needed to paste. Turn it on in System Settings, then try again." = "Accessibility access is needed to paste. Turn it on in System Settings, then try again.";
+"Recording cancelled." = "Recording cancelled.";
+"Listening... use petal://stop to transcribe." = "Listening... use petal://stop to transcribe.";
+"Model will load on first transcription." = "Model will load on first transcription.";
+"Turn on microphone access in System Settings, then return to Petal." = "Turn on microphone access in System Settings, then return to Petal.";
+"Microphone access is required to record audio." = "Microphone access is required to record audio.";

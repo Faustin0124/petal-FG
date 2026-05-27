@@ -90,18 +90,18 @@ public final class OnboardingModel {
         switch currentPage {
         case .model:
             if shouldCompleteAfterModelSelection {
-                return "Finish Setup"
+                return String(localized: "Finish Setup", bundle: .module)
             }
             return currentPage.primaryTitle
         case .accessibility:
-            return accessibilityAuthorized ? "Continue" : "Enable Accessibility"
+            return accessibilityAuthorized ? String(localized: "Continue", bundle: .module) : String(localized: "Enable Accessibility", bundle: .module)
         case .microphone:
-            return microphoneAuthorized ? "Continue" : "Enable Microphone"
+            return microphoneAuthorized ? String(localized: "Continue", bundle: .module) : String(localized: "Enable Microphone", bundle: .module)
         case .appleIntelligence:
-            return nextPage == nil ? "Finish Setup" : "Continue"
+            return nextPage == nil ? String(localized: "Finish Setup", bundle: .module) : String(localized: "Continue", bundle: .module)
         case .download:
-            if modelDownloadViewModel.state.isActive { return "Downloading..." }
-            if modelDownloadViewModel.state.isDownloaded { return "Finish Setup" }
+            if modelDownloadViewModel.state.isActive { return String(localized: "Downloading...", bundle: .module) }
+            if modelDownloadViewModel.state.isDownloaded { return String(localized: "Finish Setup", bundle: .module) }
             return currentPage.primaryTitle
         default:
             return currentPage.primaryTitle
@@ -416,8 +416,10 @@ public final class OnboardingModel {
 extension OnboardingModel.Page {
     public var primaryTitle: String {
         switch self {
-        case .welcome, .model, .shortcut, .microphone, .accessibility, .appleIntelligence, .historyRetention: "Continue"
-        case .download: "Download Model"
+        case .welcome, .model, .shortcut, .microphone, .accessibility, .appleIntelligence, .historyRetention:
+            String(localized: "Continue", bundle: .module)
+        case .download:
+            String(localized: "Download Model", bundle: .module)
         }
     }
 

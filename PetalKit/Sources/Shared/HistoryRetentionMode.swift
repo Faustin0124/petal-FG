@@ -11,13 +11,13 @@ public enum HistoryRetentionMode: String, CaseIterable, Identifiable, Sendable, 
     public var displayName: String {
         switch self {
         case .none:
-            return "Off"
+            return String(localized: "Off", bundle: .module)
         case .transcripts:
-            return "Transcripts"
+            return String(localized: "Transcripts", bundle: .module)
         case .audio:
-            return "Audio"
+            return String(localized: "Audio", bundle: .module)
         case .both:
-            return "Audio + Transcripts"
+            return String(localized: "Audio + Transcripts", bundle: .module)
         }
     }
 

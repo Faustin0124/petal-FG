@@ -1,0 +1,138 @@
+/* Settings - Tabs */
+"General" = "Général";
+"Transcription" = "Transcription";
+"History" = "Historique";
+
+/* Settings - Sections */
+"Shortcut" = "Raccourci";
+"Permissions" = "Autorisations";
+"Clipboard" = "Presse-papiers";
+"System Audio" = "Audio système";
+"Diagnostics" = "Diagnostics";
+"Model" = "Modèle";
+"Audio Preprocessing" = "Prétraitement audio";
+"Mode" = "Mode";
+"Smart Prompt" = "Invite intelligente";
+"Recent" = "Récent";
+"Retention" = "Conservation";
+"Compression" = "Compression";
+"Storage" = "Stockage";
+"Clear Data" = "Effacer les données";
+"Apple Intelligence" = "Apple Intelligence";
+
+/* Settings - Labels */
+"Hold Duration" = "Durée d'appui";
+"Microphone" = "Microphone";
+"Accessibility" = "Accessibilité";
+"Status" = "État";
+"Size" = "Taille";
+"Location" = "Emplacement";
+"Keep" = "Conserver";
+"Prompt" = "Invite";
+
+/* Settings - Permissions */
+"Granted" = "Autorisé";
+"Grant Access" = "Autoriser l'accès";
+"Unavailable" = "Non disponible";
+
+/* Settings - Toggles */
+"Restore clipboard after paste" = "Restaurer le presse-papiers après collage";
+"Lower system volume while recording" = "Baisser le volume système pendant l'enregistrement";
+"Enable logs" = "Activer les journaux";
+"Trim silence" = "Supprimer les silences";
+"Auto speed-up" = "Accélération automatique";
+"Enhance with Apple Intelligence" = "Améliorer avec Apple Intelligence";
+"Extra compression" = "Compression supplémentaire";
+
+/* Settings - Descriptions */
+"When enabled, Petal restores your previous clipboard contents after auto-pasting." = "Lorsque cette option est activée, Petal restaure le contenu précédent du presse-papiers après le collage automatique.";
+"Reduces system output volume during dictation and restores it afterward." = "Réduit le volume de sortie du système pendant la dictée et le restaure ensuite.";
+"Disabled by default to avoid creating log files unless you explicitly turn this on." = "Désactivé par défaut pour éviter la création de fichiers journaux sauf si vous l'activez explicitement.";
+"Removes silent segments from the start and end of your recording." = "Supprime les segments silencieux au début et à la fin de votre enregistrement.";
+"Speeds up quiet or low-energy audio to reduce transcription time." = "Accélère les passages silencieux ou à faible énergie pour réduire le temps de transcription.";
+"Post-process transcriptions on-device to fix grammar, punctuation, and formatting. Enables Smart mode for all models." = "Corrige la grammaire, la ponctuation et la mise en forme des transcriptions sur l'appareil. Active le mode Intelligent pour tous les modèles.";
+"Requires macOS 26 with Apple Intelligence enabled." = "Nécessite macOS 26 avec Apple Intelligence activé.";
+"History audio is saved as AAC (.m4a) by default. Enable for lower-bitrate files." = "L'audio de l'historique est enregistré en AAC (.m4a) par défaut. Activez pour des fichiers de débit plus faible.";
+
+/* Settings - Model */
+"Recommended" = "Recommandé";
+"Warming up…" = "Démarrage…";
+"Ready (No download required)" = "Prêt (aucun téléchargement requis)";
+"Downloaded" = "Téléchargé";
+"Delete Model" = "Supprimer le modèle";
+"Download Model" = "Télécharger le modèle";
+"Resume" = "Reprendre";
+"Pause" = "Pause";
+"Cancel" = "Annuler";
+"Downloading %@" = "Téléchargement de %@";
+"This will remove the downloaded model from your device. You can re-download it later." = "Cela supprimera le modèle téléchargé de votre appareil. Vous pourrez le retélécharger ultérieurement.";
+
+/* Settings - Buttons */
+"Export Logs…" = "Exporter les journaux…";
+"Check for Updates..." = "Vérifier les mises à jour...";
+"Open in Finder" = "Afficher dans le Finder";
+
+/* Settings - Tooltips */
+"Copy transcript" = "Copier la transcription";
+
+/* Settings - Alerts */
+"Delete All History & Media" = "Supprimer tout l'historique et les médias";
+"Delete Media Only" = "Supprimer les médias uniquement";
+"Delete All" = "Tout supprimer";
+"Delete Media" = "Supprimer les médias";
+"This will permanently delete all transcription history, audio files, and transcript files." = "Cela supprimera définitivement tout l'historique de transcription, les fichiers audio et les fichiers de transcription.";
+"This will delete all saved audio files but keep your transcription history intact." = "Cela supprimera tous les fichiers audio enregistrés mais conservera votre historique de transcription.";
+"Delete" = "Supprimer";
+"Delete Model Alert" = "Supprimer le modèle";
+
+/* About View */
+"Build" = "Version de build";
+"Github" = "Github";
+"Designed By" = "Conçu par";
+"Last Update" = "Dernière mise à jour";
+"Made in" = "Conçu à";
+
+/* Status Item - Menu */
+"Stop Recording" = "Arrêter l'enregistrement";
+"Grant Microphone Access" = "Autoriser l'accès au microphone";
+"Enable Accessibility Access" = "Activer l'accès à l'accessibilité";
+"History" = "Historique";
+"No transcripts yet" = "Aucune transcription pour l'instant";
+"About Petal" = "À propos de Petal";
+"Settings" = "Réglages";
+"Quit Petal" = "Quitter Petal";
+
+/* Status Title */
+"Ready" = "Prêt";
+"Setup Required" = "Configuration requise";
+"REC" = "ENR";
+"Trimming" = "Découpage";
+"Speeding" = "Accélération";
+"Transcribing" = "Transcription";
+"Refining" = "Amélioration";
+"Error" = "Erreur";
+
+/* AppModel - Transient Messages */
+"Warming up %@…" = "Démarrage de %@…";
+"Preparing %@…" = "Préparation de %@…";
+"Turn on Accessibility in System Settings to continue using Petal." = "Activez l'accessibilité dans les Réglages Système pour continuer à utiliser Petal.";
+"Copied to clipboard." = "Copié dans le presse-papiers.";
+"Drop an audio file to transcribe." = "Déposez un fichier audio à transcrire.";
+"Drop one audio file at a time." = "Déposez un seul fichier audio à la fois.";
+"That file type is not supported." = "Ce type de fichier n'est pas pris en charge.";
+"Drop an audio file, not a folder." = "Déposez un fichier audio, pas un dossier.";
+"Complete setup before transcribing files." = "Terminez la configuration avant de transcrire des fichiers.";
+"A file is already being transcribed." = "Un fichier est déjà en cours de transcription.";
+"Finish the current transcription first." = "Terminez d'abord la transcription en cours.";
+"Transcription pipeline is not available." = "Le pipeline de transcription n'est pas disponible.";
+"No speech detected." = "Aucune parole détectée.";
+"Transcription failed." = "La transcription a échoué.";
+"Complete setup to start recording." = "Terminez la configuration pour commencer à enregistrer.";
+"Turn on microphone access to record." = "Autorisez l'accès au microphone pour enregistrer.";
+"Listening — tap your shortcut to stop." = "Écoute en cours — appuyez sur votre raccourci pour arrêter.";
+"Accessibility access is needed to paste. Turn it on in System Settings, then try again." = "L'accès à l'accessibilité est nécessaire pour coller. Activez-le dans les Réglages Système, puis réessayez.";
+"Recording cancelled." = "Enregistrement annulé.";
+"Listening... use petal://stop to transcribe." = "Écoute en cours... utilisez petal://stop pour transcrire.";
+"Model will load on first transcription." = "Le modèle se chargera lors de la première transcription.";
+"Turn on microphone access in System Settings, then return to Petal." = "Activez l'accès au microphone dans les Réglages Système, puis revenez à Petal.";
+"Microphone access is required to record audio." = "L'accès au microphone est requis pour enregistrer l'audio.";

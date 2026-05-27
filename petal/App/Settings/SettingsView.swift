@@ -429,27 +429,27 @@ private enum HistoryAlert {
     var title: String {
         switch self {
         case .deleteAll:
-            return "Delete All History & Media"
+            return String(localized: "Delete All History & Media")
         case .deleteMedia:
-            return "Delete Media Only"
+            return String(localized: "Delete Media Only")
         }
     }
 
     var confirmTitle: String {
         switch self {
         case .deleteAll:
-            return "Delete All"
+            return String(localized: "Delete All")
         case .deleteMedia:
-            return "Delete Media"
+            return String(localized: "Delete Media")
         }
     }
 
     var message: String {
         switch self {
         case .deleteAll:
-            return "This will permanently delete all transcription history, audio files, and transcript files."
+            return String(localized: "This will permanently delete all transcription history, audio files, and transcript files.")
         case .deleteMedia:
-            return "This will delete all saved audio files but keep your transcription history intact."
+            return String(localized: "This will delete all saved audio files but keep your transcription history intact.")
         }
     }
 }
