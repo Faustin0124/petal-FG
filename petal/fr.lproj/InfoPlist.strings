@@ -1,0 +1,2 @@
+NSMicrophoneUsageDescription = "Petal enregistre l'audio pendant que vous maintenez votre raccourci push-to-talk.";
+NSSpeechRecognitionUsageDescription = "Petal utilise la reconnaissance vocale Apple pour transcrire les enregistrements sur les Mac compatibles.";

@@ -1,0 +1,6 @@
+/* ModelDownloadModel */
+"Download paused" = "Téléchargement en pause";
+"Model ready. Click Finish Setup to continue." = "Modèle prêt. Cliquez sur Terminer la configuration pour continuer.";
+"Select a model to continue." = "Sélectionnez un modèle pour continuer.";
+"Download failed." = "Téléchargement échoué.";
+"Failed to delete model: %@" = "Impossible de supprimer le modèle : %@";

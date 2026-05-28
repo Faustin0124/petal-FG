@@ -214,6 +214,24 @@ struct TranscriptionPane: View {
                     }
                 }
             }
+
+            Section("Languages") {
+                Picker("Input Language", selection: Binding(viewModel.$inputLanguageCode)) {
+                    ForEach(TranscriptionLanguage.supported) { lang in
+                        Text(lang.displayName).tag(lang.code)
+                    }
+                }
+
+                Picker("Output Language", selection: Binding(viewModel.$outputLanguageCode)) {
+                    Text("Same as input").tag("auto")
+                    Text("English (translate)").tag("en")
+                }
+
+                if viewModel.outputLanguageCode != "auto" {
+                    Text("Translation to English is only available with Whisper models.")
+                        .settingDescription()
+                }
+            }
         }
         .formStyle(.grouped)
         .alert("Delete Model", isPresented: $showDeleteConfirmation) {
@@ -429,27 +447,27 @@ private enum HistoryAlert {
     var title: String {
         switch self {
         case .deleteAll:
-            return "Delete All History & Media"
+            return String(localized: "Delete All History & Media")
         case .deleteMedia:
-            return "Delete Media Only"
+            return String(localized: "Delete Media Only")
         }
     }
 
     var confirmTitle: String {
         switch self {
         case .deleteAll:
-            return "Delete All"
+            return String(localized: "Delete All")
         case .deleteMedia:
-            return "Delete Media"
+            return String(localized: "Delete Media")
         }
     }
 
     var message: String {
         switch self {
         case .deleteAll:
-            return "This will permanently delete all transcription history, audio files, and transcript files."
+            return String(localized: "This will permanently delete all transcription history, audio files, and transcript files.")
         case .deleteMedia:
-            return "This will delete all saved audio files but keep your transcription history intact."
+            return String(localized: "This will delete all saved audio files but keep your transcription history intact.")
         }
     }
 }

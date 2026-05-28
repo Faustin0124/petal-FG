@@ -6,8 +6,8 @@ public enum ShortcutTriggerMode: String, CaseIterable, Identifiable, Sendable, C
 
     public var displayName: String {
         switch self {
-        case .combo: "Key Combo"
-        case .doubleTap: "Double-Tap"
+        case .combo: String(localized: "Key Combo", bundle: .module)
+        case .doubleTap: String(localized: "Double-Tap", bundle: .module)
         }
     }
 }

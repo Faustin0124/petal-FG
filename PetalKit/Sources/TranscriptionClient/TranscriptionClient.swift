@@ -14,7 +14,7 @@ import Speech
 @DependencyClient
 public struct TranscriptionClient: Sendable {
     public var prepareModelIfNeeded: @Sendable (ModelOption) async throws -> Void
-    public var transcribe: @Sendable (URL, ModelOption, TranscriptionMode, String?) async throws -> String
+    public var transcribe: @Sendable (URL, ModelOption, TranscriptionMode, String?, String?, String?) async throws -> String
     public var unloadModel: @Sendable () async -> Void = {}
     public var audioDurationSeconds: @Sendable (URL) -> Double = { _ in 0 }
 }
@@ -28,7 +28,7 @@ extension TranscriptionClient: DependencyKey {
                 guard let pipelineModel = option.pipelineModel else { return }
                 try await mlxClient.prepareModelIfNeeded(pipelineModel)
             },
-            transcribe: { audioURL, option, mode, prompt in
+            transcribe: { audioURL, option, mode, prompt, inputLanguageCode, outputLanguageCode in
                 @Dependency(\.mlxClient) var mlxClient
                 @Dependency(\.audioTrimClient) var trimClient
                 @Dependency(\.audioSpeedClient) var speedClient
@@ -144,13 +144,15 @@ extension TranscriptionClient: DependencyKey {
                     let transcript: String
 
                     if option == .appleSpeech {
-                        transcript = try await Self.transcribeWithAppleSpeech(workingAudioURL)
+                        transcript = try await Self.transcribeWithAppleSpeech(workingAudioURL, preferredLanguageCode: inputLanguageCode)
                     } else {
                         transcript = try await mlxClient.transcribe(
                             workingAudioURL,
                             mode == .verbatim
                                 ? .verbatim
-                                : .smart(prompt: prompt ?? Self.defaultSmartPrompt)
+                                : .smart(prompt: prompt ?? Self.defaultSmartPrompt),
+                            inputLanguageCode,
+                            outputLanguageCode
                         )
                     }
 
@@ -200,7 +202,7 @@ extension TranscriptionClient: TestDependencyKey {
     public static var testValue: Self {
         Self(
             prepareModelIfNeeded: { _ in },
-            transcribe: { _, _, _, _ in "Test transcription" },
+            transcribe: { _, _, _, _, _, _ in "Test transcription" },
             unloadModel: {},
             audioDurationSeconds: { _ in 1.0 }
         )
@@ -277,10 +279,10 @@ private extension ModelOption {
 }
 
 private extension TranscriptionClient {
-    static func transcribeWithAppleSpeech(_ audioURL: URL) async throws -> String {
+    static func transcribeWithAppleSpeech(_ audioURL: URL, preferredLanguageCode: String?) async throws -> String {
         #if canImport(Speech)
         if #available(macOS 26, *) {
-            return try await AppleSpeechRuntime.transcribe(audioURL: audioURL)
+            return try await AppleSpeechRuntime.transcribe(audioURL: audioURL, preferredLanguageCode: preferredLanguageCode)
         }
         #endif
         throw AppleSpeechError.unavailable
@@ -290,7 +292,7 @@ private extension TranscriptionClient {
 #if canImport(Speech)
 @available(macOS 26, *)
 private enum AppleSpeechRuntime {
-    static func transcribe(audioURL: URL) async throws -> String {
+    static func transcribe(audioURL: URL, preferredLanguageCode: String?) async throws -> String {
         guard SpeechTranscriber.isAvailable else {
             throw AppleSpeechError.unavailable
         }
@@ -307,7 +309,7 @@ private enum AppleSpeechRuntime {
             throw AppleSpeechError.noInstalledLocale
         }
 
-        let locale = preferredLocale(from: installedSupportedLocales)
+        let locale = preferredLocale(from: installedSupportedLocales, preferring: preferredLanguageCode)
         let transcriber = SpeechTranscriber(
             locale: locale,
             transcriptionOptions: [],
@@ -330,7 +332,19 @@ private enum AppleSpeechRuntime {
         return text
     }
 
-    private static func preferredLocale(from locales: [Locale]) -> Locale {
+    private static func preferredLocale(from locales: [Locale], preferring code: String?) -> Locale {
+        if let code, code != "auto" {
+            let lowercased = code.lowercased()
+            if let exactMatch = locales.first(where: { normalizedLocaleIdentifier($0) == lowercased }) {
+                return exactMatch
+            }
+            if let languageMatch = locales.first(where: {
+                $0.language.languageCode?.identifier.lowercased() == lowercased
+            }) {
+                return languageMatch
+            }
+        }
+
         let current = normalizedLocaleIdentifier(Locale.current)
         if let exactMatch = locales.first(where: { normalizedLocaleIdentifier($0) == current }) {
             return exactMatch

@@ -7,18 +7,18 @@ public enum TranscriptionMode: String, CaseIterable, Identifiable, Sendable, Cod
     public var displayName: String {
         switch self {
         case .verbatim:
-            return "Verbatim"
+            return String(localized: "Verbatim", bundle: .module)
         case .smart:
-            return "Smart"
+            return String(localized: "Smart", bundle: .module)
         }
     }
 
     public var description: String {
         switch self {
         case .verbatim:
-            return "Word-for-word transcription"
+            return String(localized: "Word-for-word transcription", bundle: .module)
         case .smart:
-            return "Refine transcription with a custom prompt"
+            return String(localized: "Refine transcription with a custom prompt", bundle: .module)
         }
     }
 }

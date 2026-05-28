@@ -37,6 +37,7 @@ extension Target.Dependency {
 
 let package = Package(
     name: "PetalKit",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v15)
     ],
@@ -91,6 +92,10 @@ let package = Package(
                 .identifiedCollections,
                 .keyboardShortcuts,
                 .casePaths,
+            ],
+            resources: [
+                .process("en.lproj"),
+                .process("fr.lproj"),
             ]
         ),
         .target(
@@ -104,6 +109,10 @@ let package = Package(
             dependencies: [
                 .assets,
                 .shared,
+            ],
+            resources: [
+                .process("en.lproj"),
+                .process("fr.lproj"),
             ]
         ),
         .target(
@@ -111,6 +120,10 @@ let package = Package(
             dependencies: [
                 .shared,
                 .downloadClient,
+            ],
+            resources: [
+                .process("en.lproj"),
+                .process("fr.lproj"),
             ]
         ),
         .target(
@@ -126,6 +139,10 @@ let package = Package(
                 .keyboardShortcuts,
                 .sauce,
                 .soundClient,
+            ],
+            resources: [
+                .process("en.lproj"),
+                .process("fr.lproj"),
             ]
         ),
 

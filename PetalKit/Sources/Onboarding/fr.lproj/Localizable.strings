@@ -1,0 +1,55 @@
+/* WelcomePage */
+"Welcome to Petal" = "Bienvenue dans Petal";
+"Your voice, transcribed privately on your Mac." = "Votre voix, transcrite en toute confidentialité sur votre Mac.";
+
+/* ShortcutPage */
+"Record a Shortcut" = "Enregistrer un raccourci";
+"Record a key combo (e.g. ⌥Space) or a single key to double-tap. Hold it down and release to finish, or quick-tap to start and tap again to stop." = "Enregistrez une combinaison de touches (ex. ⌥Espace) ou une touche simple pour double appui. Maintenez et relâchez pour terminer, ou appuyez brièvement pour démarrer et appuyez à nouveau pour arrêter.";
+
+/* ModelSelectionPage */
+"Choose a Model" = "Choisir un modèle";
+"Transcription runs entirely on-device. Choose between Apple Speech, Qwen, Whisper, and Voxtral model families." = "La transcription s'effectue entièrement sur l'appareil. Choisissez parmi les familles de modèles Apple Speech, Qwen, Whisper et Voxtral.";
+
+/* DownloadPage */
+"Download Model" = "Télécharger le modèle";
+"Model Ready" = "Modèle prêt";
+"This may take a few minutes depending on your connection." = "Cela peut prendre quelques minutes selon votre connexion.";
+"This model uses Apple's built-in Speech framework and is ready instantly." = "Ce modèle utilise le framework de reconnaissance vocale intégré d'Apple et est prêt instantanément.";
+"Tap **Download Model** below to get started." = "Appuyez sur **Télécharger le modèle** ci-dessous pour commencer.";
+"Download failed. Tap **Download Model** to retry." = "Téléchargement échoué. Appuyez sur **Télécharger le modèle** pour réessayer.";
+"Show in Finder" = "Afficher dans le Finder";
+"Minimize to mini window" = "Réduire en mini-fenêtre";
+
+/* HistoryRetentionPage */
+"Choose What to Keep" = "Choisir ce à quoi conserver";
+"Everything stays on your device — nothing is ever sent to a server. Choose what Petal keeps after each transcription." = "Tout reste sur votre appareil — rien n'est jamais envoyé à un serveur. Choisissez ce que Petal conserve après chaque transcription.";
+"Text Only" = "Texte uniquement";
+"Save the transcription text. Audio is not stored." = "Enregistre le texte de transcription. L'audio n'est pas conservé.";
+"Everything" = "Tout";
+"Keep audio recordings and transcription text." = "Conserve les enregistrements audio et le texte de transcription.";
+"Private" = "Privé";
+"Nothing is saved. Transcriptions are pasted and discarded." = "Rien n'est enregistré. Les transcriptions sont collées puis supprimées.";
+
+/* MicrophonePermissionPage */
+"Microphone Access" = "Accès au microphone";
+"To record and transcribe your voice, Petal needs microphone access." = "Pour enregistrer et transcrire votre voix, Petal a besoin d'accéder au microphone.";
+
+/* AccessibilityPermissionPage */
+"Accessibility Access" = "Accès à l'accessibilité";
+"To paste transcriptions into your active app, Petal needs accessibility access." = "Pour coller les transcriptions dans votre application active, Petal a besoin de l'accès à l'accessibilité.";
+
+/* AppleIntelligencePage */
+"Apple Intelligence" = "Apple Intelligence";
+"Enhance any model with on-device Apple Intelligence to fix grammar, punctuation, and formatting.\n\n**Additional procesing time will be added*" = "Améliorez n'importe quel modèle avec Apple Intelligence sur l'appareil pour corriger la grammaire, la ponctuation et la mise en forme.\n\n**Un temps de traitement supplémentaire sera ajouté*";
+"Enable Foundation Models" = "Activer les modèles de fondation";
+
+/* OnboardingModel - Navigation */
+"Continue" = "Continuer";
+"Finish Setup" = "Terminer la configuration";
+"Enable Microphone" = "Activer le microphone";
+"Enable Accessibility" = "Activer l'accessibilité";
+"Downloading..." = "Téléchargement...";
+
+/* OnboardingPageContainer */
+"Back" = "Retour";
+"Paused" = "En pause";

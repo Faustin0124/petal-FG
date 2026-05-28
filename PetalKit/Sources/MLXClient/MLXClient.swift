@@ -94,7 +94,7 @@ public struct MLXClient: Sendable {
     public var modelDirectoryURL: @Sendable (MLXModelInfo) -> URL? = { _ in nil }
     public var deleteModel: @Sendable (MLXModelInfo) async throws -> Void
     public var prepareModelIfNeeded: @Sendable (MLXPipelineModel) async throws -> Void
-    public var transcribe: @Sendable (URL, MLXTranscriptionMode) async throws -> String
+    public var transcribe: @Sendable (URL, MLXTranscriptionMode, String?, String?) async throws -> String
     public var unloadModel: @Sendable () async -> Void = {}
 }
 
@@ -180,16 +180,16 @@ extension MLXClient: DependencyKey {
                     throw error
                 }
             },
-            transcribe: { audioURL, mode in
+            transcribe: { audioURL, mode, inputLanguageCode, outputLanguageCode in
                 @Dependency(\.logClient) var logClient
                 let requestID = UUID().uuidString
                 let startUptime = ProcessInfo.processInfo.systemUptime
                 logClient.debug(
                     "MLXClient",
-                    "Transcribe requested. requestID=\(requestID), audioFile=\(audioURL.lastPathComponent), mode=\(mode.logSummary)"
+                    "Transcribe requested. requestID=\(requestID), audioFile=\(audioURL.lastPathComponent), mode=\(mode.logSummary), inputLang=\(inputLanguageCode ?? "auto"), outputLang=\(outputLanguageCode ?? "auto")"
                 )
                 do {
-                    let text = try await runtime.transcribe(audioURL: audioURL, mode: mode) { message in
+                    let text = try await runtime.transcribe(audioURL: audioURL, mode: mode, inputLanguageCode: inputLanguageCode, outputLanguageCode: outputLanguageCode) { message in
                         logClient.debug("MLXClient", "[transcribe \(requestID)] \(message)")
                     }
                     let elapsed = ProcessInfo.processInfo.systemUptime - startUptime
@@ -224,7 +224,7 @@ extension MLXClient: TestDependencyKey {
             modelDirectoryURL: { _ in nil },
             deleteModel: { _ in },
             prepareModelIfNeeded: { _ in },
-            transcribe: { _, _ in "Test transcription" },
+            transcribe: { _, _, _, _ in "Test transcription" },
             unloadModel: {}
         )
     }
@@ -342,6 +342,8 @@ private actor LiveMLXRuntime {
     func transcribe(
         audioURL: URL,
         mode: MLXTranscriptionMode,
+        inputLanguageCode: String?,
+        outputLanguageCode: String?,
         log: @Sendable (String) -> Void
     ) async throws -> String {
         guard let loadedModel else {
@@ -365,13 +367,14 @@ private actor LiveMLXRuntime {
                     throw MLXError.pipelineUnavailable
                 }
 
+                let voxtralLang = (inputLanguageCode == nil || inputLanguageCode == "auto") ? "en" : inputLanguageCode!
                 let backendStart = ProcessInfo.processInfo.systemUptime
                 switch mode {
                 case .verbatim:
-                    transcript = try await voxtralPipeline.transcribe(audio: audioURL, language: "en")
+                    transcript = try await voxtralPipeline.transcribe(audio: audioURL, language: voxtralLang)
                 case let .smart(prompt):
                     log("transcribe.voxtral.smart-prompt length=\(prompt.count)")
-                    transcript = try await voxtralPipeline.chat(audio: audioURL, prompt: prompt, language: "en")
+                    transcript = try await voxtralPipeline.chat(audio: audioURL, prompt: prompt, language: voxtralLang)
                 }
                 let backendElapsed = ProcessInfo.processInfo.systemUptime - backendStart
                 log("transcribe.voxtral.backend completed elapsed=\(formatElapsedSeconds(backendElapsed))")
@@ -431,8 +434,16 @@ private actor LiveMLXRuntime {
                 }
                 nonisolated(unsafe) let instance = whisperKitInstance
                 let audioPath = audioURL.path
+                let whisperInputLang = (inputLanguageCode == nil || inputLanguageCode == "auto") ? nil : inputLanguageCode
+                let shouldTranslate = outputLanguageCode == "en"
+                    && whisperInputLang != nil
+                    && whisperInputLang != "en"
+                let decodingOptions = DecodingOptions(
+                    language: whisperInputLang,
+                    task: shouldTranslate ? .translate : .transcribe
+                )
                 let whisperStart = ProcessInfo.processInfo.systemUptime
-                let results = try await instance.transcribe(audioPath: audioPath)
+                let results = try await instance.transcribe(audioPath: audioPath, decodeOptions: decodingOptions)
                 let whisperElapsed = ProcessInfo.processInfo.systemUptime - whisperStart
                 log(
                     "transcribe.whisper.backend completed elapsed=\(formatElapsedSeconds(whisperElapsed)), segments=\(results.count)"

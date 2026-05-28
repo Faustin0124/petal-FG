@@ -1,0 +1,25 @@
+/* FloatingCapsule */
+"REC" = "ENR";
+"Trimming silence" = "Suppression des silences";
+"Speeding audio" = "Accélération audio";
+"Transcribing" = "Transcription";
+"Refining" = "Amélioration";
+"Error" = "Erreur";
+"Copied to clipboard" = "Copié dans le presse-papiers";
+"Enable Accessibility" = "Activer l'accessibilité";
+"Accessibility Enabled" = "Accessibilité activée";
+"Cancel recording?  " = "Annuler l'enregistrement ?  ";
+
+/* Onboarding Container */
+"Back" = "Retour";
+
+/* RecommendedBadge */
+"Recommended" = "Recommandé";
+
+/* Permission Status */
+"Enabled" = "Activé";
+"Not Enabled" = "Non activé";
+
+/* ModelInfoRow */
+"Speed" = "Vitesse";
+"Accuracy" = "Précision";

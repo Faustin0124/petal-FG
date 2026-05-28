@@ -76,7 +76,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(disabledItem(viewModel.statusTitle))
 
         if viewModel.isRecording {
-            menu.addItem(actionItem("Stop Recording", action: #selector(stopRecording)))
+            menu.addItem(actionItem(String(localized: "Stop Recording"), action: #selector(stopRecording)))
         }
 
         if let error = viewModel.statusErrorMessage {
@@ -91,21 +91,21 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private func buildPermissionsSection(into menu: NSMenu) {
         guard viewModel.shouldShowPermissionsSection else { return }
         if viewModel.needsMicrophonePermission {
-            menu.addItem(actionItem("Grant Microphone Access", action: #selector(requestMicrophonePermission)))
+            menu.addItem(actionItem(String(localized: "Grant Microphone Access"), action: #selector(requestMicrophonePermission)))
         }
         if viewModel.needsAccessibilityPermission {
-            menu.addItem(actionItem("Enable Accessibility Access", action: #selector(requestAccessibilityPermission)))
+            menu.addItem(actionItem(String(localized: "Enable Accessibility Access"), action: #selector(requestAccessibilityPermission)))
         }
     }
 
     private func buildHistorySection(into menu: NSMenu) {
         guard viewModel.shouldShowHistoryMenu else { return }
 
-        let historyItem = NSMenuItem(title: "History", action: nil, keyEquivalent: "")
+        let historyItem = NSMenuItem(title: String(localized: "History"), action: nil, keyEquivalent: "")
         let historyMenu = NSMenu()
 
         if viewModel.historyMenuItems.isEmpty {
-            historyMenu.addItem(disabledItem("No transcripts yet"))
+            historyMenu.addItem(disabledItem(String(localized: "No transcripts yet")))
         } else {
             for entry in viewModel.historyMenuItems {
                 let item = actionItem("\(entry.title) - \(entry.subtitle)", action: #selector(copyHistoryEntry(_:)))
@@ -120,17 +120,17 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     private func buildAppSection(into menu: NSMenu) {
         if viewModel.showsCheckForUpdates {
-            let item = actionItem("Check for Updates...", action: #selector(checkForUpdates))
+            let item = actionItem(String(localized: "Check for Updates..."), action: #selector(checkForUpdates))
             item.isEnabled = viewModel.canCheckForUpdates
             menu.addItem(item)
         }
 
-        menu.addItem(actionItem("About Petal", action: #selector(showAbout)))
-        menu.addItem(actionItem("Settings", action: #selector(openSettings), key: ",", modifiers: [.command]))
+        menu.addItem(actionItem(String(localized: "About Petal"), action: #selector(showAbout)))
+        menu.addItem(actionItem(String(localized: "Settings"), action: #selector(openSettings), key: ",", modifiers: [.command]))
     }
 
     private func buildQuitSection(into menu: NSMenu) {
-        menu.addItem(actionItem("Quit Petal", action: #selector(quit), key: "q", modifiers: [.command]))
+        menu.addItem(actionItem(String(localized: "Quit Petal"), action: #selector(quit), key: "q", modifiers: [.command]))
     }
 
     private func disabledItem(_ title: String) -> NSMenuItem {

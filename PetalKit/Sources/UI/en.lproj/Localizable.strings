@@ -1,0 +1,25 @@
+/* FloatingCapsule */
+"REC" = "REC";
+"Trimming silence" = "Trimming silence";
+"Speeding audio" = "Speeding audio";
+"Transcribing" = "Transcribing";
+"Refining" = "Refining";
+"Error" = "Error";
+"Copied to clipboard" = "Copied to clipboard";
+"Enable Accessibility" = "Enable Accessibility";
+"Accessibility Enabled" = "Accessibility Enabled";
+"Cancel recording?  " = "Cancel recording?  ";
+
+/* Onboarding Container */
+"Back" = "Back";
+
+/* RecommendedBadge */
+"Recommended" = "Recommended";
+
+/* Permission Status */
+"Enabled" = "Enabled";
+"Not Enabled" = "Not Enabled";
+
+/* ModelInfoRow */
+"Speed" = "Speed";
+"Accuracy" = "Accuracy";
