@@ -30,6 +30,7 @@ final class AppModel {
     enum ProcessingStage: Equatable {
         case trimming
         case speeding
+        case warming
         case transcribing
         case refining
     }
@@ -112,6 +113,7 @@ final class AppModel {
     @ObservationIgnored private var permissionMonitorTask: Task<Void, Never>?
     @ObservationIgnored private var miniDownloadRestoreTask: Task<Void, Never>?
     @ObservationIgnored private var warmupTask: Task<Void, Never>?
+    @ObservationIgnored private var warmupForRecordingTask: Task<Void, Never>?
     @ObservationIgnored private var menuBarFlashTask: Task<Void, Never>?
     @ObservationIgnored private var downloadStateObserverTask: Task<Void, Never>?
     @ObservationIgnored private var isShowingMiniDownload = false
@@ -196,6 +198,7 @@ final class AppModel {
             switch stage {
             case .trimming: return String(localized: "Trimming")
             case .speeding: return String(localized: "Speeding")
+            case .warming: return String(localized: "Loading model")
             case .transcribing: return String(localized: "Transcribing")
             case .refining: return String(localized: "Refining")
             }
@@ -216,6 +219,7 @@ final class AppModel {
             switch stage {
             case .trimming: return "scissors"
             case .speeding: return "figure.run"
+            case .warming: return "arrow.triangle.2.circlepath"
             case .transcribing: return "hourglass"
             case .refining: return "apple.intelligence"
             }
@@ -400,6 +404,8 @@ final class AppModel {
             }
         }
 
+        beginModelWarmupForRecording()
+
         sessionState = .processing(.trimming)
         await floatingCapsuleClient.showTrimming()
 
@@ -434,6 +440,9 @@ final class AppModel {
                 sessionState = .processing(.speeding)
                 await floatingCapsuleClient.showSpeeding()
             }
+
+            pipelineStage = "warming"
+            await awaitModelWarmupForRecordingIfNeeded()
 
             pipelineStage = "transcribing"
             sessionState = .processing(.transcribing)
@@ -657,6 +666,8 @@ final class AppModel {
         isStartingRecording = true
         defer { isStartingRecording = false }
 
+        beginModelWarmupForRecording()
+
         do {
             try await audioClient.startRecording { [weak self] level in
                 guard let self else { return }
@@ -818,6 +829,9 @@ final class AppModel {
                 sessionState = .processing(.speeding)
                 await floatingCapsuleClient.showSpeeding()
             }
+
+            pipelineStage = "warming"
+            await awaitModelWarmupForRecordingIfNeeded()
 
             pipelineStage = "transcribing"
             sessionState = .processing(.transcribing)
@@ -1403,6 +1417,8 @@ final class AppModel {
             }
 
             await audioClient.cancelRecording()
+            warmupForRecordingTask?.cancel()
+            warmupForRecordingTask = nil
 
             isAwaitingCancelRecordingConfirmation = false
             pushToTalkIsActive = false
@@ -1737,6 +1753,31 @@ final class AppModel {
         Task { await floatingCapsuleClient.updateLevel(level) }
     }
 
+    /// Kicks off model preparation in the background as soon as recording starts,
+    /// so loading overlaps with the user speaking instead of happening after they stop.
+    private func beginModelWarmupForRecording() {
+        guard let selectedModelOption else { return }
+        warmupForRecordingTask?.cancel()
+        warmupForRecordingTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await self.transcriptionClient.prepareModelIfNeeded(selectedModelOption)
+            } catch {
+                self.logger.error("Background model warmup failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
+    /// Waits for the recording-start warmup to finish before transcription begins,
+    /// surfacing a "Loading model" capsule state if it hasn't completed yet.
+    private func awaitModelWarmupForRecordingIfNeeded() async {
+        guard let task = warmupForRecordingTask else { return }
+        warmupForRecordingTask = nil
+        sessionState = .processing(.warming)
+        await floatingCapsuleClient.showWarming()
+        await task.value
+    }
+
     private func warmModelTask() async {
         if isPreviewMode { return }
         guard let selectedModelOption else { return }
@@ -2014,6 +2055,7 @@ final class AppModel {
 
     deinit {
         transcriptionProgressTask?.cancel()
+        warmupForRecordingTask?.cancel()
         permissionMonitorTask?.cancel()
         miniDownloadRestoreTask?.cancel()
         menuBarFlashTask?.cancel()

@@ -21,6 +21,8 @@ public struct FloatingCapsuleView: View {
                 trimming
             case .speeding:
                 speeding
+            case .warming:
+                warming
             case .transcribing:
                 transcribing
             case .refining:
@@ -91,6 +93,18 @@ public struct FloatingCapsuleView: View {
             Text("Speeding audio")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.teal)
+        }
+        .floatingCapsuleChrome(blur: blurRadius)
+    }
+
+    private var warming: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+                .controlSize(.small)
+
+            Text("Loading model")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.primary)
         }
         .floatingCapsuleChrome(blur: blurRadius)
     }
@@ -184,6 +198,7 @@ private struct FloatingCapsulePreview: View {
         ("Confirm Cancel", .confirmCancel),
         ("Trimming", .trimming),
         ("Speeding", .speeding),
+        ("Warming", .warming),
         ("Transcribing", .transcribing),
         ("Refining", .refining),
         ("Copied", .copiedToClipboard),
