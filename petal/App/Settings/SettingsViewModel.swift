@@ -20,6 +20,7 @@ final class SettingsViewModel {
     @ObservationIgnored @Shared(.autoSpeedEnabled) var autoSpeedEnabled = false
     @ObservationIgnored @Shared(.transcriptionMode) var transcriptionMode: TranscriptionMode = .verbatim
     @ObservationIgnored @Shared(.smartPrompt) var smartPrompt = "Clean up filler words and repeated phrases. Return a polished version of what was said."
+    @ObservationIgnored @Shared(.customVocabulary) var customVocabulary = ""
     @ObservationIgnored @Shared(.historyRetentionMode) var historyRetentionMode: HistoryRetentionMode = .both
     @ObservationIgnored @Shared(.compressHistoryAudio) var compressHistoryAudio = false
     @ObservationIgnored @Shared(.appleIntelligenceEnabled) var appleIntelligenceEnabled = false
@@ -35,6 +36,7 @@ final class SettingsViewModel {
     var microphoneAuthorized = false
     var accessibilityAuthorized = false
     var permissionMessage: String?
+    var historySearchQuery: String = ""
 
     var selectedModelID: String {
         get { downloadModel.selectedModelID }
@@ -49,12 +51,24 @@ final class SettingsViewModel {
         historyClient.historyDirectoryPath()
     }
 
+    var isSearchingHistory: Bool {
+        !historySearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var recentHistoryEntries: [TranscriptHistoryEntry] {
-        transcriptHistoryDays.flatMap(\.entries)
+        let allEntries = transcriptHistoryDays.flatMap(\.entries)
             .filter { transcriptText(for: $0).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false }
             .sorted { $0.timestamp > $1.timestamp }
-            .prefix(3)
-            .map { $0 }
+
+        let query = historySearchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else {
+            return Array(allEntries.prefix(3))
+        }
+
+        return allEntries.filter { entry in
+            transcriptText(for: entry).localizedCaseInsensitiveContains(query)
+                || entry.modelID.localizedCaseInsensitiveContains(query)
+        }
     }
 
     var canExportLogs: Bool {

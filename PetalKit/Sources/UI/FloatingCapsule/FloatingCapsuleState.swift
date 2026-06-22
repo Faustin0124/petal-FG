@@ -9,6 +9,7 @@ public final class FloatingCapsuleState {
         case confirmCancel
         case trimming
         case speeding
+        case warming
         case transcribing
         case refining
         case copiedToClipboard

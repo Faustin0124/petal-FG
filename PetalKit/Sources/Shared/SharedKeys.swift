@@ -42,6 +42,9 @@ public extension SharedKey where Self == AppStorageKey<String>.Default {
     static var smartPrompt: Self {
         Self[.appStorage("smart_prompt"), default: "Clean up filler words and repeated phrases. Return a polished version of what was said."]
     }
+    static var customVocabulary: Self {
+        Self[.appStorage("custom_vocabulary"), default: ""]
+    }
     static var inputLanguageCode: Self {
         Self[.appStorage("input_language_code"), default: "auto"]
     }

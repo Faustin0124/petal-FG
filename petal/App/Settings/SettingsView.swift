@@ -232,6 +232,13 @@ struct TranscriptionPane: View {
                         .settingDescription()
                 }
             }
+
+            Section("Custom Vocabulary") {
+                TextField("Names, acronyms, or jargon, separated by commas", text: Binding(viewModel.$customVocabulary), axis: .vertical)
+                    .lineLimit(2 ... 4)
+                Text("Used as a hint in Smart mode to improve recognition of unusual words. Only applied with the Voxtral models.")
+                    .settingDescription()
+            }
         }
         .formStyle(.grouped)
         .alert("Delete Model", isPresented: $showDeleteConfirmation) {
@@ -331,8 +338,13 @@ struct HistoryPane: View {
 
     var body: some View {
         Form {
+            Section {
+                TextField("Search transcripts", text: $viewModel.historySearchQuery)
+                    .textFieldStyle(.roundedBorder)
+            }
+
             if !viewModel.recentHistoryEntries.isEmpty {
-                Section("Recent") {
+                Section(viewModel.isSearchingHistory ? "Search Results" : "Recent") {
                     ForEach(viewModel.recentHistoryEntries) { entry in
                         let transcript = viewModel.transcriptText(for: entry)
                         HStack(alignment: .top) {
@@ -353,6 +365,11 @@ struct HistoryPane: View {
                             .help("Copy transcript")
                         }
                     }
+                }
+            } else if viewModel.isSearchingHistory {
+                Section {
+                    Text("No transcripts match your search.")
+                        .settingDescription()
                 }
             }
 

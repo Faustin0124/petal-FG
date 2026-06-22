@@ -10,6 +10,7 @@ public struct FloatingCapsuleClient: Sendable {
     public var showRecording: @Sendable () async -> Void = {}
     public var showTrimming: @Sendable () async -> Void = {}
     public var showSpeeding: @Sendable () async -> Void = {}
+    public var showWarming: @Sendable () async -> Void = {}
     public var updateLevel: @Sendable (Double) async -> Void = { _ in }
     public var showTranscribing: @Sendable () async -> Void = {}
     public var updateTranscriptionProgress: @Sendable (Double) async -> Void = { _ in }
@@ -33,6 +34,9 @@ extension FloatingCapsuleClient: DependencyKey {
             },
             showSpeeding: {
                 await MainActor.run { LiveFloatingCapsuleRuntimeContainer.shared.showSpeeding() }
+            },
+            showWarming: {
+                await MainActor.run { LiveFloatingCapsuleRuntimeContainer.shared.showWarming() }
             },
             updateLevel: { level in
                 await MainActor.run { LiveFloatingCapsuleRuntimeContainer.shared.updateLevel(level) }
@@ -74,6 +78,7 @@ extension FloatingCapsuleClient: TestDependencyKey {
             showRecording: {},
             showTrimming: {},
             showSpeeding: {},
+            showWarming: {},
             updateLevel: { _ in },
             showTranscribing: {},
             updateTranscriptionProgress: { _ in },
@@ -134,6 +139,11 @@ private final class LiveFloatingCapsuleRuntime {
 
     func showSpeeding() {
         state.phase = .speeding
+        showWindowIfNeeded()
+    }
+
+    func showWarming() {
+        state.phase = .warming
         showWindowIfNeeded()
     }
 

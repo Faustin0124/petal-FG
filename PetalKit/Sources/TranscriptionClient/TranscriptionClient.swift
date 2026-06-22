@@ -39,6 +39,7 @@ extension TranscriptionClient: DependencyKey {
 
                 @Shared(.trimSilenceEnabled) var trimEnabled
                 @Shared(.autoSpeedEnabled) var speedEnabled
+                @Shared(.customVocabulary) var customVocabulary
 
                 let requestID = UUID().uuidString
                 let requestStartUptime = ProcessInfo.processInfo.systemUptime
@@ -150,7 +151,7 @@ extension TranscriptionClient: DependencyKey {
                             workingAudioURL,
                             mode == .verbatim
                                 ? .verbatim
-                                : .smart(prompt: prompt ?? Self.defaultSmartPrompt),
+                                : .smart(prompt: Self.withVocabularyHint(prompt ?? Self.defaultSmartPrompt, vocabulary: customVocabulary)),
                             inputLanguageCode,
                             outputLanguageCode
                         )
@@ -232,6 +233,12 @@ private func audioFileDurationSecondsAsync(_ url: URL) async -> Double {
 private extension TranscriptionClient {
     static let defaultSmartPrompt = "Clean up filler words and repeated phrases. Return a polished version of what was said."
     static let trimSilenceThreshold: Float = 0.003
+
+    static func withVocabularyHint(_ basePrompt: String, vocabulary: String) -> String {
+        let trimmedVocabulary = vocabulary.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedVocabulary.isEmpty else { return basePrompt }
+        return "\(basePrompt)\n\nPay close attention to these terms which may appear in the audio: \(trimmedVocabulary)."
+    }
 
     static func autoSpeedRate(for audioDuration: Double) -> Double? {
         switch audioDuration {
