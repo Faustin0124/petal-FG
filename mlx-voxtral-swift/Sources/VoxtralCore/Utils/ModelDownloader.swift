@@ -378,7 +378,11 @@ public class ModelDownloader {
             "--summary-interval=0",
             "--console-log-level=warn",
             "--download-result=hide",
-            "--check-certificate=false"
+            "--check-certificate=false",
+            "--max-tries=8",
+            "--retry-wait=3",
+            "--timeout=30",
+            "--max-connection-per-server=4"
         ]
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
@@ -497,6 +501,11 @@ public class ModelDownloader {
         activeGIDs = []
     }
 
+    /// Number of attempts for the initial HuggingFace file-list request before giving up.
+    /// This call happens before aria2c starts, so a single dropped connection here would
+    /// otherwise abort the whole download with no retry.
+    private static let fileListMaxAttempts = 4
+
     private static func fetchModelFiles(repoId: String, subfolder: String? = nil) async throws -> [HuggingFaceTreeItem] {
         var urlString = "https://huggingface.co/api/models/\(repoId)/tree/main"
         if let subfolder {
@@ -508,16 +517,29 @@ public class ModelDownloader {
             throw ModelDownloaderError.downloadFailed("Invalid HuggingFace API URL.")
         }
 
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
-            throw ModelDownloaderError.downloadFailed("HuggingFace API returned an invalid response.")
+        var lastError: Error?
+        for attempt in 1...fileListMaxAttempts {
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
+                    throw ModelDownloaderError.downloadFailed("HuggingFace returned an unexpected response while listing files for \(repoId).")
+                }
+                return try JSONDecoder().decode([HuggingFaceTreeItem].self, from: data)
+            } catch {
+                lastError = error
+                if attempt < fileListMaxAttempts {
+                    // Exponential backoff: 1s, 2s, 4s. Transient network drops recover on their own;
+                    // this avoids failing a slow/flaky connection on the very first hiccup.
+                    let delaySeconds = UInt64(1 << (attempt - 1))
+                    try? await Task.sleep(for: .seconds(delaySeconds))
+                }
+            }
         }
 
-        do {
-            return try JSONDecoder().decode([HuggingFaceTreeItem].self, from: data)
-        } catch {
-            throw ModelDownloaderError.downloadFailed("Could not decode HuggingFace file list: \(error.localizedDescription)")
-        }
+        let underlyingDescription = (lastError as? LocalizedError)?.errorDescription ?? lastError?.localizedDescription ?? "unknown error"
+        throw ModelDownloaderError.downloadFailed(
+            "Could not reach HuggingFace to list files for \(repoId) after \(fileListMaxAttempts) attempts. Check your internet connection and try again. (\(underlyingDescription))"
+        )
     }
 
     private static func encodePathForURL(_ path: String) -> String {
@@ -653,7 +675,11 @@ public class ModelDownloader {
             "--summary-interval=0",
             "--console-log-level=warn",
             "--download-result=hide",
-            "--check-certificate=false"
+            "--check-certificate=false",
+            "--max-tries=8",
+            "--retry-wait=3",
+            "--timeout=30",
+            "--max-connection-per-server=4"
         ]
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice

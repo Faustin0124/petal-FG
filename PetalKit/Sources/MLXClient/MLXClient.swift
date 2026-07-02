@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreML
 import Dependencies
 import DependenciesMacros
 import FluidAudio
@@ -6,6 +7,10 @@ import Foundation
 import LogClient
 import VoxtralCore
 import WhisperKit
+
+/// Compute unit levels tried in order when loading a CoreML-backed model: the SDK's own
+/// default first (typically CPU + Neural Engine), then GPU, then CPU-only as a last resort.
+private let computeUnitsFallbackLevels: [MLComputeUnits] = [.cpuAndNeuralEngine, .cpuAndGPU, .cpuOnly]
 
 /// Root directory for all Petal data: ~/Documents/petal/
 private let petalDirectory: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -314,7 +319,13 @@ private actor LiveMLXRuntime {
                 "prepare.parakeet.model-ready elapsed=\(formatElapsedSeconds(resolveElapsed)), directory=\(modelDirectory.lastPathComponent)"
             )
             let asrLoadStart = ProcessInfo.processInfo.systemUptime
-            let asrModels = try await AsrModels.load(from: modelDirectory, version: .v3)
+            // Some Macs (older Intel/Apple Silicon, or ANE under memory pressure) fail to
+            // compile the CoreML model for the Neural Engine. Retry progressively on GPU
+            // then CPU-only compute units rather than leaving the user stuck on a hard failure.
+            let asrModels = try await loadParakeetModelsWithComputeFallback(
+                modelDirectory: modelDirectory,
+                log: log
+            )
             let asrLoadElapsed = ProcessInfo.processInfo.systemUptime - asrLoadStart
             log("prepare.parakeet.asrModels-loaded elapsed=\(formatElapsedSeconds(asrLoadElapsed))")
             let managerInitStart = ProcessInfo.processInfo.systemUptime
@@ -329,7 +340,10 @@ private actor LiveMLXRuntime {
             }
             log("prepare.whisper.begin variant=\(variant)")
             let whisperStart = ProcessInfo.processInfo.systemUptime
-            whisperKitInstance = try await WhisperKit(model: variant, downloadBase: petalDirectory)
+            whisperKitInstance = try await loadWhisperKitWithComputeFallback(
+                variant: variant,
+                log: log
+            )
             let whisperElapsed = ProcessInfo.processInfo.systemUptime - whisperStart
             log("prepare.whisper.loaded elapsed=\(formatElapsedSeconds(whisperElapsed))")
         }
@@ -479,6 +493,68 @@ private actor LiveMLXRuntime {
         parakeetAsrManager = nil
         whisperKitInstance = nil
         loadedModel = nil
+    }
+
+    /// Loads Parakeet's CoreML models, retrying on progressively less specialized compute
+    /// units if the default (CPU + Neural Engine) fails to load, e.g. on machines where ANE
+    /// compilation is unreliable. Mirrors the WhisperKit fallback below.
+    ///
+    /// NOTE: `AsrModels.defaultConfiguration()` / `.computeUnits` is the API surface documented
+    /// by FluidAudio's manual-loading guide as of the `main` branch; this has not been verified
+    /// against the exact pinned release (0.14.3) with a real compiler. If the property names
+    /// differ in that release, adjust `computeUnitsFallbackLevels` usage below accordingly.
+    private func loadParakeetModelsWithComputeFallback(
+        modelDirectory: URL,
+        log: @Sendable (String) -> Void
+    ) async throws -> AsrModels {
+        var lastError: Error?
+        for (index, computeUnits) in computeUnitsFallbackLevels.enumerated() {
+            do {
+                if index == 0 {
+                    // First attempt: FluidAudio's own default (CPU + Neural Engine).
+                    return try await AsrModels.load(from: modelDirectory, version: .v3)
+                }
+                var configuration = AsrModels.defaultConfiguration()
+                configuration.computeUnits = computeUnits
+                log("prepare.parakeet.compute-fallback attempt=\(index), computeUnits=\(computeUnits)")
+                return try await AsrModels.load(from: modelDirectory, configuration: configuration, version: .v3)
+            } catch {
+                lastError = error
+                log("prepare.parakeet.compute-attempt-failed attempt=\(index), error=\(error.localizedDescription)")
+            }
+        }
+        throw lastError ?? MLXError.pipelineUnavailable
+    }
+
+    /// Loads WhisperKit, retrying on progressively less specialized compute units if the
+    /// default fails (e.g. Intel Macs or older Apple Silicon where the Neural Engine path
+    /// can fail to compile). See `ModelComputeOptions` in WhisperKit.
+    private func loadWhisperKitWithComputeFallback(
+        variant: String,
+        log: @Sendable (String) -> Void
+    ) async throws -> WhisperKit {
+        var lastError: Error?
+        for (index, computeUnits) in computeUnitsFallbackLevels.enumerated() {
+            do {
+                let computeOptions: ModelComputeOptions? = index == 0 ? nil : ModelComputeOptions(
+                    melCompute: computeUnits,
+                    audioEncoderCompute: computeUnits,
+                    textDecoderCompute: computeUnits
+                )
+                if index > 0 {
+                    log("prepare.whisper.compute-fallback attempt=\(index), computeUnits=\(computeUnits)")
+                }
+                return try await WhisperKit(
+                    model: variant,
+                    downloadBase: petalDirectory,
+                    computeOptions: computeOptions
+                )
+            } catch {
+                lastError = error
+                log("prepare.whisper.compute-attempt-failed attempt=\(index), error=\(error.localizedDescription)")
+            }
+        }
+        throw lastError ?? MLXError.pipelineUnavailable
     }
 
     private func normalizeQwenTranscript(_ text: String) -> String {

@@ -36,6 +36,16 @@
 2. Open the `.dmg` and move Petal to `Applications`.
 3. Launch Petal and grant microphone/accessibility permissions.
 
+## Building for internal distribution
+
+To share an ad-hoc build with collaborators (no Apple Developer account or notarization required):
+
+```
+scripts/release/build-adhoc.sh
+```
+
+This builds `petal.app` (ad-hoc signed) and produces a zip in the repo root. Since the app isn't notarized, each collaborator needs to right-click → Open on first launch to bypass Gatekeeper (see the script's output for the full instructions). For an official signed and notarized release, use `scripts/release/create-release.sh` instead.
+
 ## Supported Transcription Models
 
 <table>
