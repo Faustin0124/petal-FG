@@ -171,6 +171,21 @@ struct TranscriptionPane: View {
                     .settingDescription()
             }
 
+            Section("Live Transcription") {
+                Toggle(
+                    "Show text while speaking",
+                    isOn: Binding(viewModel.$streamingTranscriptionEnabled)
+                )
+                .disabled(!viewModel.streamingTranscriptionSupported)
+                if viewModel.streamingTranscriptionSupported {
+                    Text("Displays a live, partial transcript in the recording indicator as you speak.")
+                        .settingDescription()
+                } else {
+                    Text("Only available with the Apple Speech model.")
+                        .settingDescription()
+                }
+            }
+
             Section {
                 if viewModel.appleIntelligenceAvailable {
                     Toggle("Enhance with Apple Intelligence", isOn: Binding(viewModel.$appleIntelligenceEnabled))

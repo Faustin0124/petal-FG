@@ -23,6 +23,8 @@ public struct FloatingCapsuleView: View {
                 speeding
             case .transcribing:
                 transcribing
+            case let .streaming(text):
+                streaming(text)
             case .refining:
                 RefiningCapsuleContent(contentBlur: blurRadius)
             case .copiedToClipboard:
@@ -102,6 +104,31 @@ public struct FloatingCapsuleView: View {
             Text("Transcribing")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.primary)
+        }
+        .floatingCapsuleChrome(blur: blurRadius)
+    }
+
+    private func streaming(_ text: String) -> some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(.red)
+                .frame(width: 8, height: 8)
+
+            Group {
+                if text.isEmpty {
+                    Text("Listening…")
+                        .foregroundStyle(.secondary)
+                } else {
+                    // Show the tail of the transcript (most recently spoken words matter most
+                    // while live) rather than the head, which would go stale as text grows.
+                    Text(text)
+                        .truncationMode(.head)
+                        .foregroundStyle(.primary)
+                }
+            }
+            .font(.footnote.weight(.medium))
+            .lineLimit(2)
+            .frame(maxWidth: 280, alignment: .leading)
         }
         .floatingCapsuleChrome(blur: blurRadius)
     }

@@ -51,6 +51,7 @@ final class AppModel {
     @ObservationIgnored @Shared(.historyRetentionMode) var historyRetentionMode: HistoryRetentionMode = .both
     @ObservationIgnored @Shared(.pushToTalkThreshold) var pushToTalkThreshold: PushToTalkThreshold = .long
     @ObservationIgnored @Shared(.restoreClipboardAfterPaste) var restoreClipboardAfterPaste = true
+    @ObservationIgnored @Shared(.streamingTranscriptionEnabled) var streamingTranscriptionEnabled = false
     @ObservationIgnored @Shared(.duckSystemAudioDuringRecording) var duckSystemAudioDuringRecording = false
     @ObservationIgnored @Shared(.shortcutTriggerMode) var shortcutTriggerMode: ShortcutTriggerMode = .combo
     @ObservationIgnored @Shared(.doubleTapKey) var doubleTapKey: DoubleTapKey = .unconfigured
@@ -116,6 +117,7 @@ final class AppModel {
     @ObservationIgnored private var downloadStateObserverTask: Task<Void, Never>?
     @ObservationIgnored private var isShowingMiniDownload = false
     @ObservationIgnored private var activeHistorySessionID: UUID?
+    @ObservationIgnored private var activeStreamingHandle: StreamingTranscriptionHandle?
     @ObservationIgnored private var isPlaybackDucked = false
     var menuBarFlashOn = true
     @ObservationIgnored private var estimatedTranscriptionRTF = 2.2
@@ -658,10 +660,48 @@ final class AppModel {
         defer { isStartingRecording = false }
 
         do {
-            try await audioClient.startRecording { [weak self] level in
-                guard let self else { return }
-                Task { @MainActor [self, level] in
-                    self.recordingLevelDidUpdate(level)
+            if streamingTranscriptionEnabled, selectedModelOption == .appleSpeech {
+                do {
+                    let handle = try await transcriptionClient.startStreaming(
+                        .appleSpeech,
+                        inputLanguageCode == "auto" ? nil : inputLanguageCode
+                    ) { [weak self] partialText in
+                        Task { @MainActor [self, partialText] in
+                            self?.streamingTextDidUpdate(partialText)
+                        }
+                    }
+                    activeStreamingHandle = handle
+
+                    try await audioClient.startStreamingRecording(
+                        { [weak self] level in
+                            guard let self else { return }
+                            Task { @MainActor [self, level] in
+                                self.recordingLevelDidUpdate(level)
+                            }
+                        },
+                        { [weak self] buffer in
+                            self?.activeStreamingHandle?.pushBuffer(buffer)
+                        }
+                    )
+                } catch {
+                    // Streaming setup failed (e.g. no installed Apple Speech locale) — fall back
+                    // to the regular batch recording path instead of failing the whole session.
+                    logger.error("Streaming transcription unavailable, falling back to batch: \(error.localizedDescription, privacy: .public)")
+                    activeStreamingHandle?.cancel()
+                    activeStreamingHandle = nil
+                    try await audioClient.startRecording { [weak self] level in
+                        guard let self else { return }
+                        Task { @MainActor [self, level] in
+                            self.recordingLevelDidUpdate(level)
+                        }
+                    }
+                }
+            } else {
+                try await audioClient.startRecording { [weak self] level in
+                    guard let self else { return }
+                    Task { @MainActor [self, level] in
+                        self.recordingLevelDidUpdate(level)
+                    }
                 }
             }
 
@@ -775,8 +815,16 @@ final class AppModel {
 
         toggleRecordingIsActive = false
         isAwaitingCancelRecordingConfirmation = false
-        sessionState = .processing(.trimming)
-        await floatingCapsuleClient.showTrimming()
+        // A streaming session (if active) already produced the transcript live; skip the
+        // trim/speed-up phases below, which only exist to shorten batch transcription time.
+        let streamingHandle = activeStreamingHandle
+        activeStreamingHandle = nil
+        if streamingHandle == nil {
+            sessionState = .processing(.trimming)
+            await floatingCapsuleClient.showTrimming()
+        } else {
+            sessionState = .processing(.transcribing)
+        }
         let historySessionID = activeHistorySessionID ?? uuid()
         defer { activeHistorySessionID = nil }
         let pipelineStart = now
@@ -814,7 +862,7 @@ final class AppModel {
                 )
             )
 
-            if autoSpeedRate(for: audioDuration) != nil {
+            if streamingHandle == nil, autoSpeedRate(for: audioDuration) != nil {
                 sessionState = .processing(.speeding)
                 await floatingCapsuleClient.showSpeeding()
             }
@@ -832,14 +880,19 @@ final class AppModel {
             }
 
             let transcriptionCallStart = now
-            var transcript = try await transcriptionClient.transcribe(
-                audioURL,
-                selectedModelOption,
-                mode,
-                mode == .smart ? smartPrompt : nil,
-                inputLanguageCode == "auto" ? nil : inputLanguageCode,
-                outputLanguageCode == "auto" ? nil : outputLanguageCode
-            )
+            var transcript: String
+            if let streamingHandle {
+                transcript = try await streamingHandle.finish()
+            } else {
+                transcript = try await transcriptionClient.transcribe(
+                    audioURL,
+                    selectedModelOption,
+                    mode,
+                    mode == .smart ? smartPrompt : nil,
+                    inputLanguageCode == "auto" ? nil : inputLanguageCode,
+                    outputLanguageCode == "auto" ? nil : outputLanguageCode
+                )
+            }
             let transcriptionCallElapsed = now.timeIntervalSince(transcriptionCallStart)
             let originalTranscript = transcript
             var shouldPersistOriginalVariant = false
@@ -1403,6 +1456,8 @@ final class AppModel {
             }
 
             await audioClient.cancelRecording()
+            activeStreamingHandle?.cancel()
+            activeStreamingHandle = nil
 
             isAwaitingCancelRecordingConfirmation = false
             pushToTalkIsActive = false
@@ -1735,6 +1790,11 @@ final class AppModel {
     private func recordingLevelDidUpdate(_ level: Double) {
         guard case .recording = sessionState else { return }
         Task { await floatingCapsuleClient.updateLevel(level) }
+    }
+
+    private func streamingTextDidUpdate(_ text: String) {
+        guard case .recording = sessionState, activeStreamingHandle != nil else { return }
+        Task { await floatingCapsuleClient.updateStreamingText(text) }
     }
 
     private func warmModelTask() async {

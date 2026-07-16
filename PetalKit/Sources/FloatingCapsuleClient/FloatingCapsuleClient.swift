@@ -13,6 +13,9 @@ public struct FloatingCapsuleClient: Sendable {
     public var updateLevel: @Sendable (Double) async -> Void = { _ in }
     public var showTranscribing: @Sendable () async -> Void = {}
     public var updateTranscriptionProgress: @Sendable (Double) async -> Void = { _ in }
+    /// Shows the live partial transcript. Call repeatedly with the latest text as it updates;
+    /// call once with an empty string to enter the phase before any text has arrived.
+    public var updateStreamingText: @Sendable (String) async -> Void = { _ in }
     public var showRefining: @Sendable () async -> Void = {}
     public var showCancelConfirmation: @Sendable () async -> Void = {}
     public var showCopiedToClipboard: @Sendable () async -> Void = {}
@@ -42,6 +45,9 @@ extension FloatingCapsuleClient: DependencyKey {
             },
             updateTranscriptionProgress: { progress in
                 await MainActor.run { LiveFloatingCapsuleRuntimeContainer.shared.updateTranscriptionProgress(progress) }
+            },
+            updateStreamingText: { text in
+                await MainActor.run { LiveFloatingCapsuleRuntimeContainer.shared.updateStreamingText(text) }
             },
             showRefining: {
                 await MainActor.run { LiveFloatingCapsuleRuntimeContainer.shared.showRefining() }
@@ -77,6 +83,7 @@ extension FloatingCapsuleClient: TestDependencyKey {
             updateLevel: { _ in },
             showTranscribing: {},
             updateTranscriptionProgress: { _ in },
+            updateStreamingText: { _ in },
             showRefining: {},
             showCancelConfirmation: {},
             showCopiedToClipboard: {},
@@ -144,6 +151,11 @@ private final class LiveFloatingCapsuleRuntime {
     func showTranscribing() {
         state.transcriptionProgress = 0
         state.phase = .transcribing
+        showWindowIfNeeded()
+    }
+
+    func updateStreamingText(_ text: String) {
+        state.phase = .streaming(text)
         showWindowIfNeeded()
     }
 
