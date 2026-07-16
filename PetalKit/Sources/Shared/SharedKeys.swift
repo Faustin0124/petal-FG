@@ -14,6 +14,13 @@ public extension SharedKey where Self == AppStorageKey<Bool>.Default {
         Self[.appStorage("auto_speed_enabled"), default: false]
     }
 
+    /// Live word-by-word transcription while recording, instead of waiting for the full
+    /// recording to finish. Only supported by Apple Speech today (see
+    /// `TranscriptionClient.startStreaming`); ignored for other models.
+    static var streamingTranscriptionEnabled: Self {
+        Self[.appStorage("streaming_transcription_enabled"), default: false]
+    }
+
     static var compressHistoryAudio: Self {
         Self[.appStorage("compress_history_audio"), default: false]
     }

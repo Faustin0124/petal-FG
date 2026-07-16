@@ -22,6 +22,15 @@ public struct AudioClient: Sendable {
     public var isRecording: @Sendable () async -> Bool = { false }
     public var warmup: @Sendable () -> Void = {}
     public var startRecording: @Sendable (@escaping @Sendable (Double) -> Void) async throws -> Void
+    /// Like `startRecording`, but also delivers live PCM buffers via `bufferHandler` as they're
+    /// captured, for incremental/streaming transcription. Still writes the full recording to a
+    /// WAV file underneath (returned by `stopRecording`), so downstream trimming/speed-up/history
+    /// keep working unchanged. Uses `AVAudioEngine` instead of `AVAudioRecorder` internally, since
+    /// `AVAudioRecorder` exposes no live sample access.
+    public var startStreamingRecording: @Sendable (
+        @escaping @Sendable (Double) -> Void,
+        @escaping @Sendable (AVAudioPCMBuffer) -> Void
+    ) async throws -> Void
     public var stopRecording: @Sendable () async throws -> URL
     public var cancelRecording: @Sendable () async -> Void = {}
 }
@@ -37,6 +46,12 @@ extension AudioClient: DependencyKey {
             },
             startRecording: { levelHandler in
                 try await LiveAudioCaptureRuntimeContainer.shared.startRecording(levelHandler: levelHandler)
+            },
+            startStreamingRecording: { levelHandler, bufferHandler in
+                try await LiveAudioCaptureRuntimeContainer.shared.startStreamingRecording(
+                    levelHandler: levelHandler,
+                    bufferHandler: bufferHandler
+                )
             },
             stopRecording: {
                 try await LiveAudioCaptureRuntimeContainer.shared.stopRecording()
@@ -54,6 +69,7 @@ extension AudioClient: TestDependencyKey {
             isRecording: { false },
             warmup: {},
             startRecording: { _ in },
+            startStreamingRecording: { _, _ in },
             stopRecording: { URL(fileURLWithPath: "/dev/null") },
             cancelRecording: {}
         )
@@ -101,6 +117,11 @@ private final class LiveAudioCaptureRuntime: @unchecked Sendable {
     private var levelTimer: DispatchSourceTimer?
     private let levelSmoother = LevelSmoother()
 
+    // Streaming (AVAudioEngine) capture state. Mutually exclusive with `recorder` above:
+    // only one of the two capture mechanisms is active at a time.
+    private var streamingEngine: AVAudioEngine?
+    private var streamingFile: AVAudioFile?
+
     private nonisolated(unsafe) static let recordingSettings: [String: Any] = [
         AVFormatIDKey: Int(kAudioFormatLinearPCM),
         AVSampleRateKey: 44_100,
@@ -113,6 +134,9 @@ private final class LiveAudioCaptureRuntime: @unchecked Sendable {
     var isRecording: Bool {
         stateQueue.sync {
             if simulatedRecordingSourceURL != nil {
+                return true
+            }
+            if streamingEngine != nil {
                 return true
             }
             return recorder?.isRecording ?? false
@@ -194,6 +218,82 @@ private final class LiveAudioCaptureRuntime: @unchecked Sendable {
         startLevelPollingLocked()
     }
 
+    func startStreamingRecording(
+        levelHandler: @escaping @Sendable (Double) -> Void,
+        bufferHandler: @escaping @Sendable (AVAudioPCMBuffer) -> Void
+    ) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            stateQueue.async { [self] in
+                do {
+                    try startStreamingRecordingLocked(levelHandler: levelHandler, bufferHandler: bufferHandler)
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    private func startStreamingRecordingLocked(
+        levelHandler: @escaping @Sendable (Double) -> Void,
+        bufferHandler: @escaping @Sendable (AVAudioPCMBuffer) -> Void
+    ) throws {
+        guard recorder == nil, streamingEngine == nil, simulatedRecordingSourceURL == nil else { return }
+        self.levelHandler = levelHandler
+
+        if let e2eAudioURL = Self.e2eAudioFixtureURL() {
+            // Streaming isn't meaningful against a fixture; fall back to the simulated batch path.
+            simulatedRecordingSourceURL = e2eAudioURL
+            recordingURL = e2eAudioURL
+            startSimulatedLevelPollingLocked()
+            return
+        }
+
+        // Discard any pre-warmed AVAudioRecorder standby; streaming uses AVAudioEngine instead.
+        standbyRecorder = nil
+        standbyURL = nil
+
+        let engine = AVAudioEngine()
+        let inputNode = engine.inputNode
+        let format = inputNode.outputFormat(forBus: 0)
+
+        let audioURL = FileManager.default.temporaryDirectory
+            .appending(path: "petal-\(UUID().uuidString).wav")
+
+        let file: AVAudioFile
+        do {
+            file = try AVAudioFile(forWriting: audioURL, settings: format.settings)
+        } catch {
+            throw AudioClientError.failedToStart
+        }
+
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
+            guard let self else { return }
+            self.stateQueue.async {
+                try? file.write(from: buffer)
+            }
+            let level = Self.levelFromBuffer(buffer)
+            let smoothed = self.levelSmoother.smooth(level)
+            let handler = self.levelHandler
+            DispatchQueue.main.async {
+                handler(smoothed)
+            }
+            bufferHandler(buffer)
+        }
+
+        engine.prepare()
+        do {
+            try engine.start()
+        } catch {
+            inputNode.removeTap(onBus: 0)
+            throw AudioClientError.failedToStart
+        }
+
+        streamingEngine = engine
+        streamingFile = file
+        recordingURL = audioURL
+    }
+
     func stopRecording() async throws -> URL {
         try await withCheckedThrowingContinuation { continuation in
             stateQueue.async { [self] in
@@ -210,6 +310,10 @@ private final class LiveAudioCaptureRuntime: @unchecked Sendable {
     private func stopRecordingLocked() throws -> URL {
         if let fixtureURL = simulatedRecordingSourceURL {
             return try stopSimulatedRecordingLocked(sourceURL: fixtureURL)
+        }
+
+        if streamingEngine != nil {
+            return try stopStreamingRecordingLocked()
         }
 
         guard let recorder, let url = recordingURL else {
@@ -237,6 +341,32 @@ private final class LiveAudioCaptureRuntime: @unchecked Sendable {
         return url
     }
 
+    private func stopStreamingRecordingLocked() throws -> URL {
+        guard let engine = streamingEngine, let url = recordingURL else {
+            throw AudioClientError.notRecording
+        }
+
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+        streamingEngine = nil
+        streamingFile = nil
+        recordingURL = nil
+        levelHandler(0)
+
+        // Pre-warm next standby recorder (for the next non-streaming recording) in the background.
+        stateQueue.asyncAfter(deadline: .now() + 0.1) { [self] in
+            warmupStandbyLocked()
+        }
+
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int64 ?? 0
+        guard fileSize > 44 else {
+            try? FileManager.default.removeItem(at: url)
+            throw AudioClientError.failedToStart
+        }
+
+        return url
+    }
+
     func cancelRecording() async {
         await withCheckedContinuation { continuation in
             stateQueue.async { [self] in
@@ -252,6 +382,23 @@ private final class LiveAudioCaptureRuntime: @unchecked Sendable {
             simulatedRecordingSourceURL = nil
             recordingURL = nil
             levelHandler(0)
+            return
+        }
+
+        if let engine = streamingEngine {
+            engine.inputNode.removeTap(onBus: 0)
+            engine.stop()
+            streamingEngine = nil
+            streamingFile = nil
+            let url = recordingURL
+            recordingURL = nil
+            levelHandler(0)
+            if let url {
+                try? FileManager.default.removeItem(at: url)
+            }
+            stateQueue.asyncAfter(deadline: .now() + 0.1) { [self] in
+                warmupStandbyLocked()
+            }
             return
         }
 
@@ -341,6 +488,24 @@ private final class LiveAudioCaptureRuntime: @unchecked Sendable {
         }
         let normalized = (Double(power) + 50.0) / 50.0
         return max(0, min(1, normalized))
+    }
+
+    /// Computes an approximate dB level from a live PCM buffer (RMS over the first channel),
+    /// mirroring `AVAudioRecorder.averagePower(forChannel:)` closely enough for the level meter.
+    nonisolated private static func levelFromBuffer(_ buffer: AVAudioPCMBuffer) -> Double {
+        guard let channelData = buffer.floatChannelData else { return 0 }
+        let frameLength = Int(buffer.frameLength)
+        guard frameLength > 0 else { return 0 }
+
+        let samples = channelData[0]
+        var sumOfSquares: Float = 0
+        for index in 0..<frameLength {
+            let sample = samples[index]
+            sumOfSquares += sample * sample
+        }
+        let rms = sqrt(sumOfSquares / Float(frameLength))
+        let decibels = 20 * log10(max(rms, 1e-7))
+        return normalizePower(decibels)
     }
 
     nonisolated private static func e2eAudioFixtureURL() -> URL? {

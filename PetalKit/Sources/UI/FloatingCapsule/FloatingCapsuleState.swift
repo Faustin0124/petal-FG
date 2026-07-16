@@ -10,6 +10,9 @@ public final class FloatingCapsuleState {
         case trimming
         case speeding
         case transcribing
+        /// Live streaming transcription in progress; associated text is the best-effort
+        /// transcript so far, updated as the user speaks.
+        case streaming(String)
         case refining
         case copiedToClipboard
         case accessibilityPrompt

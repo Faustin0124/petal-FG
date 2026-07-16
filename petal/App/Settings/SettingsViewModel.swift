@@ -18,6 +18,7 @@ final class SettingsViewModel {
     @ObservationIgnored @Shared(.outputLanguageCode) var outputLanguageCode = "auto"
     @ObservationIgnored @Shared(.trimSilenceEnabled) var trimSilenceEnabled = false
     @ObservationIgnored @Shared(.autoSpeedEnabled) var autoSpeedEnabled = false
+    @ObservationIgnored @Shared(.streamingTranscriptionEnabled) var streamingTranscriptionEnabled = false
     @ObservationIgnored @Shared(.transcriptionMode) var transcriptionMode: TranscriptionMode = .verbatim
     @ObservationIgnored @Shared(.smartPrompt) var smartPrompt = "Clean up filler words and repeated phrases. Return a polished version of what was said."
     @ObservationIgnored @Shared(.historyRetentionMode) var historyRetentionMode: HistoryRetentionMode = .both
@@ -114,6 +115,12 @@ final class SettingsViewModel {
     var smartModeAvailable: Bool {
         downloadModel.selectedModelOption?.supportsSmartTranscription == true
             || appleIntelligenceEnabled
+    }
+
+    /// Live streaming transcription is only implemented for Apple Speech today
+    /// (see `TranscriptionClient.startStreaming`).
+    var streamingTranscriptionSupported: Bool {
+        downloadModel.selectedModelOption == .appleSpeech
     }
 
     let downloadModel: ModelDownloadModel
